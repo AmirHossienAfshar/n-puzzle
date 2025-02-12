@@ -7,8 +7,7 @@ The (n²-1) sliding puzzle with Python and Reinforcement Learning.
 ### how to run
 1. Clone the repository:
 ```
-git clone https://github.com/your-username/sliding-puzzle-ai.git
-cd sliding-puzzle-ai
+git clone https://github.com/AmirHossienAfshar/n-puzzle.git
 ```
 2. Install dependencies:
 ```
