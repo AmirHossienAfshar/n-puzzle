@@ -30,7 +30,7 @@ ApplicationWindow {
             id: tile
             width: puzzleGrid.cellWidth
             height: puzzleGrid.cellHeight
-            color: modelData === 0 ? "black" : "white"
+            color: modelData === 0 ? "lightgray" : "white"
             border.color: "black"
 
             Text {
