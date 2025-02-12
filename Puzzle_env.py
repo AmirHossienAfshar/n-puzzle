@@ -88,7 +88,8 @@ class SlidingPuzzleEnv(gym.Env):
 
     def render(self, mode="human"):
         """Render the puzzle board."""
-        print(self.state)
+        # print(self.state)
+        return self.state
 
 # env = SlidingPuzzleEnv(size=3)
 # state = env.reset()

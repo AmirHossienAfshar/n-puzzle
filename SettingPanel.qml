@@ -1,12 +1,17 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import Pyside_Settings 1.0
 
 ApplicationWindow {
     visible: true
     width: 400
     height: 350
     title: "Settings Panel"
+
+    Pyside_Settings_class {
+        id: settings
+    }
 
     ColumnLayout {
         anchors.fill: parent

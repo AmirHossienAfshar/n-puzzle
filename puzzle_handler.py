@@ -3,17 +3,35 @@ import threading
 import numpy as np
 import time
 import random
+from puzzle_env import SlidingPuzzleEnv
 
 class PuzzleBridge(QObject):
     puzzle_list_changed = Signal()
     puzzle_size_changed = Signal()
     
+    _instance = None  # Singleton instance
+    
+    @classmethod
+    def get_instance(cls):
+        """Returns the singleton instance of Bridge."""
+        if cls._instance is None:
+            cls._instance = PuzzleBridge()
+        return cls._instance
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(self):
+        if hasattr(self, "_initialized"):
+            return
         super().__init__()
         self.puzzle_list = []
         self.puzzle_size = 0
         t = threading.Thread(target=self.main_func, daemon=True)
         t.start()
+        self.environment = None
 
     def set_puzzle_list(self, value):
         self.puzzle_list = value
@@ -107,14 +125,19 @@ class PuzzleBridge(QObject):
         return states
     
     def main_func(self):
-        self.puzzle_size = 7
+        
+        self.puzzle_size = 5
+        self.environment = SlidingPuzzleEnv(self.puzzle_size)
+        state = self.environment.render().flatten()
+        self.set_puzzle_list(state.tolist())
+        
         # generated_states = self.test_puzzle(10)
         # for state in generated_states:
         #     self.set_puzzle_list(state)
         #     time.sleep(0.5)
         
-        generated_states = self.test_puzzle_flat(1000)
-        for state in generated_states:
-            self.set_puzzle_list(state)
-            # print(state)
-            time.sleep(0.05)
+        # generated_states = self.test_puzzle_flat(1000)
+        # for state in generated_states:
+        #     self.set_puzzle_list(state)
+        #     # print(state)
+        #     time.sleep(0.05)
