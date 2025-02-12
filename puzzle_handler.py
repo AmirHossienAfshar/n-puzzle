@@ -35,7 +35,9 @@ class PuzzleBridge(QObject):
         self.environment = SlidingPuzzleEnv(self.puzzle_size)
         self.step_per_sec = 0
         self.agent_type = None
+        self.agent = None
         self.train_progress = 0.0
+        self.train_episode_num = 1000
 
     def set_puzzle_list(self, value):
         self.puzzle_list = value

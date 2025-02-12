@@ -15,9 +15,10 @@ class SlidingPuzzleEnv(gym.Env):
         self.size = size
         self.goal_state = self._generate_goal_state()
         self.state = self._shuffle_board()
+        self.puzzle_to_solve = None
 
         # 4 possible moves: Up, Down, Left, Right
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Discrete(4) ########################################### is this part consistent to the other explanations?
 
         # Observation space (flattened board representation)
         self.observation_space = spaces.Box(low=0, high=self.size**2-1, shape=(self.size**2,), dtype=np.int32)
@@ -74,17 +75,41 @@ class SlidingPuzzleEnv(gym.Env):
             self.state[x, y], self.state[nx, ny] = self.state[nx, ny], self.state[x, y]
             return True
         return False
+    
+    def manhattan_distance(self, state, goal_state):
+        """Compute the Manhattan distance between state and goal_state."""
+        distance = 0
+        for num in range(1, state.size):  # Ignore 0 (empty space)
+            x, y = np.where(state == num)  # Find current position
+            gx, gy = np.where(goal_state == num)  # Find goal position
+            distance += abs(x - gx) + abs(y - gy)
+        return distance
 
     def step(self, action):
-        """Execute an action, return new state, reward, and done flag."""
-        if self._apply_action(action):
-            reward = -1
-            done = np.array_equal(self.state, self.goal_state)
-            if done:
-                reward = 100
-            return self.state.flatten(), reward, done, {}
+        """Execute an action and return state, reward, and done flag."""
+        prev_distance = self.manhattan_distance(self.state, self.goal_state)
 
-        return self.state.flatten(), -5, False, {}
+        if self._apply_action(action):
+            new_distance = self.manhattan_distance(self.state, self.goal_state)
+            reward = prev_distance - new_distance  # Reward based on improvement
+
+            if np.array_equal(self.state, self.goal_state):
+                reward = 100  # Large reward for solving
+
+            return self.state.flatten(), reward, np.array_equal(self.state, self.goal_state), {}
+
+        return self.state.flatten(), -5, False, {}  # Heavy penalty for invalid moves
+
+    # def step(self, action): # old version, that didn't make sense
+    #     """Execute an action, return new state, reward, and done flag."""
+    #     if self._apply_action(action):
+    #         reward = -1
+    #         done = np.array_equal(self.state, self.goal_state)
+    #         if done:
+    #             reward = 100
+    #         return self.state.flatten(), reward, done, {}
+
+    #     return self.state.flatten(), -5, False, {}
 
     def reset(self):
         """Reset the board to a new shuffled state."""
