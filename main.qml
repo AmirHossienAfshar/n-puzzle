@@ -33,6 +33,7 @@ ApplicationWindow {
         SettingPanel {
             Layout.preferredWidth: 300
             Layout.fillHeight: true
+            trainingProgressValue: bridge.pyside_training_progress
         }
     }
 }

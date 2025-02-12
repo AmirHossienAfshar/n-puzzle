@@ -21,6 +21,11 @@ class SlidingPuzzleEnv(gym.Env):
 
         # Observation space (flattened board representation)
         self.observation_space = spaces.Box(low=0, high=self.size**2-1, shape=(self.size**2,), dtype=np.int32)
+        
+    def set_size(self, size): # this part has to be double checked, to make sure that this generate goal test and suffle board are neccecary
+        self.size = size
+        self.goal_state = self._generate_goal_state()
+        self.state = self._shuffle_board()
 
     def _generate_goal_state(self):
         """Generate the solved puzzle as a NumPy array."""
@@ -74,7 +79,7 @@ class SlidingPuzzleEnv(gym.Env):
         """Execute an action, return new state, reward, and done flag."""
         if self._apply_action(action):
             reward = -1
-            done = np.array_equal(self.state, self.goal_state)  # Check if solved
+            done = np.array_equal(self.state, self.goal_state)
             if done:
                 reward = 100
             return self.state.flatten(), reward, done, {}
@@ -86,7 +91,7 @@ class SlidingPuzzleEnv(gym.Env):
         self.state = self._shuffle_board()
         return self.state.flatten()
 
-    def render(self, mode="human"):
+    def render(self, mode="human"): # this part has to be make sure, how that this render function is used in the main.py
         """Render the puzzle board."""
         # print(self.state)
         return self.state

@@ -4,6 +4,8 @@ import QtQuick.Layouts 1.15
 import Pyside_Setting 1.0
 
 Item {
+    property alias trainingProgressValue: trainValue.value
+
     id: settingsPanel
     Pyside_Setting_class {
         id: settings
@@ -33,8 +35,9 @@ Item {
                         text: "Puzzle grid size:"
                     }
                     ComboBox {
+                        id: puzzleSizeComboBox
                         Layout.fillWidth: true
-                        model: ["3x3", "4x4", "5x5"]
+                        model: ["3x3", "4x4", "5x5", "6x6", "7x7", "8x8"]
                     }
                 }
                 Button {
@@ -42,6 +45,8 @@ Item {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
+                        let selectedSize = puzzleSizeComboBox.currentText;
+                        settings.setting_set_puzzle_size(selectedSize)
                         settings.setting_initiate_generate_puzzle()
                     }
                 }
@@ -68,13 +73,15 @@ Item {
                         text: "Agent type:"
                     }
                     ComboBox {
+                        id: agentComboBox
                         Layout.fillWidth: true
-                        model: ["Q-Learning", "A*", "Dijkstra"]
+                        model: ["Q-Learning", "A*", "Sarsa"]
                     }
                     Label {
                         text: "Solver speed (step/sec):"
                     }
                     ComboBox {
+                        id: solverSpeedComboBox
                         Layout.fillWidth: true
                         model: ["1", "2", "4"]
                     }
@@ -83,11 +90,16 @@ Item {
                     text: "Train!"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
+                    onClicked: {
+                        settings.setting_set_agent_type(agentComboBox.currentText)
+                        settings.setting_set_solver_speed(solverSpeedComboBox.currentText)
+                    }
                 }
             }
         }
 
         GroupBox {
+            visible: agentComboBox.currentText === "Q-Learning" || agentComboBox.currentText === "Sarsa"
             id: trainingProgress
             title: "Training Progress"
             Layout.fillWidth: true
@@ -102,8 +114,9 @@ Item {
                     text: "Training:"
                 }
                 ProgressBar {
+                    id: trainValue
                     Layout.fillWidth: true
-                    value: 0.4  // Example progress value
+                    value: 0.0  // Example progress value
                 }
             }
         }

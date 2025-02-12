@@ -8,6 +8,7 @@ from puzzle_env import SlidingPuzzleEnv
 class PuzzleBridge(QObject):
     puzzle_list_changed = Signal()
     puzzle_size_changed = Signal()
+    agent_training_progress_changed = Signal()
     
     _instance = None  # Singleton instance
     
@@ -27,12 +28,14 @@ class PuzzleBridge(QObject):
         if hasattr(self, "_initialized"):
             return
         super().__init__()
-        self.puzzle_list = []
-        self.puzzle_size = 0
-        self.step_per_sec = 0
+        self.puzzle_list = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.puzzle_size = 3
         t = threading.Thread(target=self.main_func, daemon=True)
         t.start()
-        self.environment = None
+        self.environment = SlidingPuzzleEnv(self.puzzle_size)
+        self.step_per_sec = 0
+        self.agent_type = None
+        self.train_progress = 0.0
 
     def set_puzzle_list(self, value):
         self.puzzle_list = value
@@ -44,11 +47,20 @@ class PuzzleBridge(QObject):
     
     def set_puzzle_size(self, value):
         self.puzzle_size = value
+        self.environment.set_size(value) # this part is working, but probebly need's to be considered changing in the future.
         self.puzzle_size_changed.emit()
         
     def get_puzzle_size(self):
         return self.puzzle_size
     
+    def set_agent_training_progress(self, value):
+        self.train_progress = value
+        self.agent_training_progress_changed.emit()
+        
+    def get_agent_training_progress(self):
+        return self.train_progress
+    
+    pyside_training_progress = Property(float, get_agent_training_progress, set_agent_training_progress, notify=agent_training_progress_changed)
     pyside_puzzle_list = Property(list, get_puzzle_list, set_puzzle_list, notify=puzzle_list_changed)
     pyside_puzzle_size = Property(int, get_puzzle_size, set_puzzle_size, notify=puzzle_size_changed)
     
@@ -92,9 +104,7 @@ class PuzzleBridge(QObject):
             )
 
             states.append(puzzle.flatten().tolist())
-        # print("done.")
         return states
-    
     
     def test_puzzle_flat(self, steps=10):
         n = self.puzzle_size
@@ -124,12 +134,23 @@ class PuzzleBridge(QObject):
         
         return states
     
-    def main_func(self):
-        
-        self.puzzle_size = 5
-        self.environment = SlidingPuzzleEnv(self.puzzle_size)
-        state = self.environment.render().flatten()
+    def test_progress_bar(self):
+        for i in range(101):
+            time.sleep(0.1)
+            self.set_agent_training_progress(i/100)
+    def generate_new_puzzle(self):
+        state = self.environment.reset().flatten()
         self.set_puzzle_list(state.tolist())
+        
+
+    
+    def main_func(self):
+        self.test_progress_bar()
+        
+        # self.puzzle_size = 5
+        # self.environment = SlidingPuzzleEnv(self.puzzle_size)
+        # state = self.environment.render().flatten()
+        # self.set_puzzle_list(state.tolist())
         
         # generated_states = self.test_puzzle(10)
         # for state in generated_states:
