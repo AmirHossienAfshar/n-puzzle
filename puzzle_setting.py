@@ -51,9 +51,14 @@ class PuzzleSetting(QObject):
         '''sets the solver speed, the parameter is steps per second'''
         self.bridge.step_per_sec = value
         
+    @Slot(int)
+    def setting_set_episode_number(self, value):
+        '''sets the number of episodes that the agent is going to train'''
+        self.bridge.train_episode_num = value
+        
     @Slot()
     def setting_initiate_train(self):
-        pass
+        self.bridge.agent.train(1000)
     
     @Slot()
     def setting_initiate_generate_puzzle(self):

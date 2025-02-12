@@ -85,14 +85,33 @@ Item {
                         Layout.fillWidth: true
                         model: ["1", "2", "4"]
                     }
+                    Label {
+                        visible: agentComboBox.currentText === "Q-Learning" || agentComboBox.currentText === "Sarsa"
+                        text: "Train episode number:"
+                    }
+                    // TextArea {
+                    //     id: episodeNumberInput
+                    //     Layout.fillWidth: true
+                    //     text: "1000"
+                    // }
+                    TextField {
+                        visible: agentComboBox.currentText === "Q-Learning" || agentComboBox.currentText === "Sarsa"
+                        id: episodeNumberInput
+                        Layout.fillWidth: true
+                        text: "1000"
+                        validator: IntValidator { bottom: 0; top: 100000 }
+                        inputMethodHints: Qt.ImhDigitsOnly
+                    }
                 }
                 Button {
+                    visible: agentComboBox.currentText === "Q-Learning" || agentComboBox.currentText === "Sarsa"
                     text: "Train!"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
                         settings.setting_set_agent_type(agentComboBox.currentText)
                         settings.setting_set_solver_speed(solverSpeedComboBox.currentText)
+                        settings.setting_set_episode_number(episodeNumberInput.text)
                     }
                 }
             }
@@ -117,6 +136,27 @@ Item {
                     id: trainValue
                     Layout.fillWidth: true
                     value: 0.0  // Example progress value
+                }
+            }
+        }
+        GroupBox {
+            id: solverControl
+            title: "Solver Control"
+            Layout.fillWidth: true
+            Layout.fillHeight: false
+            font.pixelSize: 14
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 10
+
+                Button {
+                    text: "Start the Solver"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
+                    onClicked: {
+                        // settings.setting_start_solver()
+                    }
                 }
             }
         }
