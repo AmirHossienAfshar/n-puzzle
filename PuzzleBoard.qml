@@ -2,7 +2,7 @@ import QtQuick 2.15
 
 GridView {
     id: puzzleGrid
-    anchors.centerIn: parent
+    // anchors.centerIn: parent
     width: Math.min(parent.width, parent.height)
     height: width
 

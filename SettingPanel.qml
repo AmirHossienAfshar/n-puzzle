@@ -1,15 +1,11 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import Pyside_Settings 1.0
+import Pyside_Setting 1.0
 
-ApplicationWindow {
-    visible: true
-    width: 400
-    height: 350
-    title: "Settings Panel"
-
-    Pyside_Settings_class {
+Item {
+    id: settingsPanel
+    Pyside_Setting_class {
         id: settings
     }
 
@@ -17,7 +13,6 @@ ApplicationWindow {
         anchors.fill: parent
         spacing: 10
 
-        // Puzzle Settings GroupBox
         GroupBox {
             id: puzzleSettings
             title: "Puzzle Settings"
@@ -30,7 +25,6 @@ ApplicationWindow {
                 spacing: 10
 
                 GridLayout {
-                    // anchors.horizontalCenter: parent.horizontalCenter
                     columns: 2
                     rowSpacing: 5
                     columnSpacing: 10
@@ -47,6 +41,9 @@ ApplicationWindow {
                     text: "Generate Puzzle!"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
+                    onClicked: {
+                        settings.setting_initiate_generate_puzzle()
+                    }
                 }
             }
         }
@@ -63,7 +60,6 @@ ApplicationWindow {
                 spacing: 10
 
                 GridLayout {
-                    // anchors.horizontalCenter: parent.horizontalCenter
                     columns: 2
                     rowSpacing: 5
                     columnSpacing: 10
@@ -90,6 +86,7 @@ ApplicationWindow {
                 }
             }
         }
+
         GroupBox {
             id: trainingProgress
             title: "Training Progress"

@@ -8,6 +8,7 @@ class PuzzleSetting(QObject):
         
     @Slot(int)
     def setting_set_puzzle_size(self, value):
+        '''sets the puzzle size, the parameter is the size of the puzzle grid'''
         self.bridge.set_puzzle_size(value)
 
     @Slot(str)
@@ -16,7 +17,8 @@ class PuzzleSetting(QObject):
     
     @Slot(int)
     def setting_set_solver_speed(self, value):
-        pass
+        '''sets the solver speed, the parameter is steps per second'''
+        self.bridge.step_per_sec = value
         
     @Slot()
     def setting_initiate_train(self):
@@ -24,7 +26,7 @@ class PuzzleSetting(QObject):
     
     @Slot()
     def setting_initiate_generate_puzzle(self):
-        pass
+        print("generate puzzle")
     
     @Slot()
     def setting_initiate_solve_puzzle(self):

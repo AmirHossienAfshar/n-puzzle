@@ -29,6 +29,7 @@ class PuzzleBridge(QObject):
         super().__init__()
         self.puzzle_list = []
         self.puzzle_size = 0
+        self.step_per_sec = 0
         t = threading.Thread(target=self.main_func, daemon=True)
         t.start()
         self.environment = None
@@ -91,8 +92,7 @@ class PuzzleBridge(QObject):
             )
 
             states.append(puzzle.flatten().tolist())
-           
-        print("done.")
+        # print("done.")
         return states
     
     
