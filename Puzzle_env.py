@@ -19,6 +19,8 @@ class SlidingPuzzleEnv(gym.Env):
 
         # 4 possible moves: Up, Down, Left, Right
         self.action_space = spaces.Discrete(4) ########################################### is this part consistent to the other explanations?
+        
+        self.visited_states = [] #?
 
         # Observation space (flattened board representation)
         self.observation_space = spaces.Box(low=0, high=self.size**2-1, shape=(self.size**2,), dtype=np.int32)
@@ -27,6 +29,12 @@ class SlidingPuzzleEnv(gym.Env):
         self.size = size
         self.goal_state = self._generate_goal_state()
         self.state = self._shuffle_board()
+        
+    def set_puzzle_to_solve(self, value):
+        self.puzzle_to_solve = value
+        
+    def get_puzzle_to_solve(self):
+        return self.puzzle_to_solve
 
     def _generate_goal_state(self):
         """Generate the solved puzzle as a NumPy array."""
@@ -51,23 +59,62 @@ class SlidingPuzzleEnv(gym.Env):
         )
         return inv_count % 2 == 0
 
+    # def get_possible_moves(self):
+    #     """Returns possible moves as action indices (0: Up, 1: Down, 2: Left, 3: Right)."""
+    #     x, y = np.argwhere(self.state == 0)[0]
+    #     moves = {}
+    #     if x > 0:
+    #         moves[Move.UP] = (-1, 0)
+    #     if x < self.size - 1:
+    #         moves[Move.DOWN] = (1, 0)
+    #     if y > 0:
+    #         moves[Move.LEFT] = (0, -1)
+    #     if y < self.size - 1:
+    #         moves[Move.RIGHT] = (0, 1)
+    #     return moves
+    
     def get_possible_moves(self):
         """Returns possible moves as action indices (0: Up, 1: Down, 2: Left, 3: Right)."""
         x, y = np.argwhere(self.state == 0)[0]
         moves = {}
         if x > 0:
-            moves[Move.UP] = (-1, 0)
+            moves[0] = (-1, 0)  # Up
         if x < self.size - 1:
-            moves[Move.DOWN] = (1, 0)
+            moves[1] = (1, 0)   # Down
         if y > 0:
-            moves[Move.LEFT] = (0, -1)
+            moves[2] = (0, -1)  # Left
         if y < self.size - 1:
-            moves[Move.RIGHT] = (0, 1)
+            moves[3] = (0, 1)   # Right
         return moves
 
+    # def _apply_action(self, action):
+    #     """Move the empty tile based on action if valid."""
+    #     # moves = self.get_possible_moves()
+    #     # if action in moves:
+    #     #     dx, dy = moves[action]
+    #     #     x, y = np.argwhere(self.state == 0)[0]
+    #     #     nx, ny = x + dx, y + dy
+    #     #     self.state[x, y], self.state[nx, ny] = self.state[nx, ny], self.state[x, y]
+    #     #     return True
+    #     # return False # this ond one had inconsiency with the enumeration. 
+    #     action_map = {
+    #     0: Move.UP,
+    #     1: Move.DOWN,
+    #     2: Move.LEFT,
+    #     3: Move.RIGHT
+    #     }
+    #     moves = self.get_possible_moves()
+    #     if action_map[action] in moves:
+    #         dx, dy = moves[action_map[action]]
+    #         x, y = np.argwhere(self.state == 0)[0]
+    #         nx, ny = x + dx, y + dy
+    #         self.state[x, y], self.state[nx, ny] = self.state[nx, ny], self.state[x, y]
+    #         return True
+    #     return False
+    
     def _apply_action(self, action):
         """Move the empty tile based on action if valid."""
-        moves = self.get_possible_moves()
+        moves = self.get_possible_moves()  # keys are integers: 0, 1, 2, 3
         if action in moves:
             dx, dy = moves[action]
             x, y = np.argwhere(self.state == 0)[0]
@@ -84,21 +131,46 @@ class SlidingPuzzleEnv(gym.Env):
             gx, gy = np.where(goal_state == num)  # Find goal position
             distance += abs(x - gx) + abs(y - gy)
         return distance
-
+    
     def step(self, action):
         """Execute an action and return state, reward, and done flag."""
         prev_distance = self.manhattan_distance(self.state, self.goal_state)
 
         if self._apply_action(action):
             new_distance = self.manhattan_distance(self.state, self.goal_state)
-            reward = prev_distance - new_distance  # Reward based on improvement
+            # Reward based on improvement plus a small constant penalty per step.
+            reward = (prev_distance - new_distance) - 0.5
 
+            # If the puzzle is solved, override with a large reward.
             if np.array_equal(self.state, self.goal_state):
-                reward = 100  # Large reward for solving
+                reward = 100
 
             return self.state.flatten(), reward, np.array_equal(self.state, self.goal_state), {}
 
-        return self.state.flatten(), -5, False, {}  # Heavy penalty for invalid moves
+        # Return heavy penalty for invalid moves.
+        return self.state.flatten(), -5, False, {}
+    
+    # def step(self, action):
+    #     # Use an episode-level visited set (stored in the environment or agent).
+    #     state_key = tuple(self.state.flatten())
+
+    #     prev_distance = self.manhattan_distance(self.state, self.goal_state)
+    #     if self._apply_action(action):
+    #         new_distance = self.manhattan_distance(self.state, self.goal_state)
+    #         reward = 2.0 * (prev_distance - new_distance) - 0.5  # Weighted improvement + step penalty
+
+    #         if state_key in self.visited_states:
+    #             reward -= 2.0  # Extra penalty for revisiting a known state
+    #         else:
+    #             self.visited_states.append(state_key)
+
+    #         if np.array_equal(self.state, self.goal_state):
+    #             reward = 100
+
+    #         return self.state.flatten(), reward, np.array_equal(self.state, self.goal_state), {}
+
+    #     return self.state.flatten(), -5, False, {}
+
 
     # def step(self, action): # old version, that didn't make sense
     #     """Execute an action, return new state, reward, and done flag."""
@@ -110,6 +182,12 @@ class SlidingPuzzleEnv(gym.Env):
     #         return self.state.flatten(), reward, done, {}
 
     #     return self.state.flatten(), -5, False, {}
+    
+    def generate_puzzle(self):
+        """this part is for the initial puzzle, not the one that is going to learn form"""
+        self.state = self._shuffle_board()
+        self.puzzle_to_solve = self.state.flatten()
+        return self.state.flatten()
 
     def reset(self):
         """Reset the board to a new shuffled state."""
@@ -124,3 +202,4 @@ class SlidingPuzzleEnv(gym.Env):
 # env = SlidingPuzzleEnv(size=3)
 # state = env.reset()
 # env.render()
+
