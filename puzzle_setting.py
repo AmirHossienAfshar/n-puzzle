@@ -58,8 +58,9 @@ class PuzzleSetting(QObject):
         
     @Slot()
     def setting_initiate_train(self):
-        self.bridge.agent.train(1000)
-    
+        '''calls the handler's train agent function'''
+        self.bridge.train_agent()
+        
     @Slot()
     def setting_initiate_generate_puzzle(self):
         '''generates a new puzzle, which is garenteed to be a solvable one.'''
@@ -67,5 +68,6 @@ class PuzzleSetting(QObject):
     
     @Slot()
     def setting_initiate_solve_puzzle(self):
-        pass
+        '''calls the handler's solve puzzle function'''
+        self.bridge.sovle_puzzle()
         

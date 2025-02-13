@@ -4,11 +4,13 @@ import numpy as np
 import time
 import random
 from puzzle_env import SlidingPuzzleEnv
+from QlearningAgent import QLearningAgent
 
 class PuzzleBridge(QObject):
     puzzle_list_changed = Signal()
     puzzle_size_changed = Signal()
     agent_training_progress_changed = Signal()
+    invoke_start_btn_changed = Signal()
     
     _instance = None  # Singleton instance
     
@@ -38,6 +40,7 @@ class PuzzleBridge(QObject):
         self.agent = None
         self.train_progress = 0.0
         self.train_episode_num = 1000
+        self.invoke_start = True
 
     def set_puzzle_list(self, value):
         self.puzzle_list = value
@@ -62,6 +65,15 @@ class PuzzleBridge(QObject):
     def get_agent_training_progress(self):
         return self.train_progress
     
+    def set_invoke_start_btn(self, value): # this is either setted invokable when the training done, or when the model is setted to the A*
+                                            # needs to be handelds. initially is setted to true for now.
+        self.invoke_start = value
+        self.invoke_start_btn_changed.emit()
+        
+    def get_invoke_start_btn(self):
+        return self.invoke_start
+    
+    pyside_invoke_start_btn = Property(bool, get_invoke_start_btn, set_invoke_start_btn, notify=invoke_start_btn_changed)
     pyside_training_progress = Property(float, get_agent_training_progress, set_agent_training_progress, notify=agent_training_progress_changed)
     pyside_puzzle_list = Property(list, get_puzzle_list, set_puzzle_list, notify=puzzle_list_changed)
     pyside_puzzle_size = Property(int, get_puzzle_size, set_puzzle_size, notify=puzzle_size_changed)
@@ -140,12 +152,33 @@ class PuzzleBridge(QObject):
         for i in range(101):
             time.sleep(0.1)
             self.set_agent_training_progress(i/100)
+            
     def generate_new_puzzle(self):
-        state = self.environment.reset().flatten()
-        self.set_puzzle_list(state.tolist())
+        state = self.environment.generate_puzzle().flatten()
+        self.set_puzzle_list(state.tolist()) # each puzzle that is setted here, is going to be the one that is solved.
         
-
-    
+    def train_agent(self):
+        # self.agent = QLearningAgent(self.environment) ### this part has to be handled. 
+        self.agent = QLearningAgent(
+            game_env=self.environment,
+            learning_rate=0.1,
+            discount_factor=0.95,   
+            exploration_rate=1.0,
+            epsilon_decay_rate=0.995,
+            min_epsilon=0.01
+        )
+        self.agent.train(self.train_episode_num)
+        
+    def sovle_puzzle(self):
+        puzzle_to_solve = self.environment.get_puzzle_to_solve()
+        solution_steps = self.agent.solve(puzzle_to_solve)
+        self.render(solution_steps)
+        
+    def render(self, solved_array):
+        for arr_ in solved_array:
+            self.set_puzzle_list(solved_array)
+            time.sleep(1 // self.step_per_sec)
+        
     def main_func(self):
         self.test_progress_bar()
         

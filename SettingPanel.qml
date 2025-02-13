@@ -5,6 +5,7 @@ import Pyside_Setting 1.0
 
 Item {
     property alias trainingProgressValue: trainValue.value
+    property alias startSolverEnabled: startSolverButton.enabled
 
     id: settingsPanel
     Pyside_Setting_class {
@@ -151,9 +152,11 @@ Item {
                 spacing: 10
 
                 Button {
+                    id: startSolverButton
                     text: "Start the Solver"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
+                    enabled: agentComboBox.currentText === "A*" // this one has to be overrided with the properity alias. has problems...
                     onClicked: {
                         // settings.setting_start_solver()
                     }

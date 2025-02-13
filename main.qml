@@ -34,6 +34,7 @@ ApplicationWindow {
             Layout.preferredWidth: 300
             Layout.fillHeight: true
             trainingProgressValue: bridge.pyside_training_progress
+            startSolverEnabled: bridge.pyside_invoke_start_btn
         }
     }
 }
