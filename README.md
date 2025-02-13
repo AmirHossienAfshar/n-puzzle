@@ -17,3 +17,8 @@ pip install -r requirements.txt
 ```
 python main.py
 ```
+
+### current challenge
+the Qlearning agent gets stuck in a loop.
+what I have done to improve that?
+1. use a menhattan distance for wighting rewards.
