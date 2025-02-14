@@ -23,30 +23,13 @@ class QLearningAgent(Agent):
     def get_state_key(self, state):
         """Convert a state (flattened array) into a hashable key (tuple)."""
         return tuple(state)
-
-    # def select_action(self, state):
-    #     """Epsilon-greedy action selection with valid move restriction."""
-    #     possible_moves = self.env.get_possible_moves()
-
-    #     if state not in self.q_table:
-    #         self.q_table[state] = {action: 0.0 for action in possible_moves}
-
-    #     if np.random.rand() < self.exploration_rate:
-    #         return np.random.choice(list(possible_moves.keys())) # What if possible_moves is empty? (Edge case)
-
-    #     q_values = self.q_table[state]
-
-    #     max_q = max(q_values[action] for action in possible_moves)
-
-    #     best_actions = [action for action in possible_moves if q_values[action] == max_q]
-
-    #     return np.random.choice(best_actions)
     
     def select_action(self, state):
         """Epsilon-greedy action selection with valid move restriction."""
         # print(f"the state to put action on, is: {state}")
         state_key = self.get_state_key(state)  # Convert state to a hashable key.
         possible_moves = self.env.get_possible_moves()  # This returns a dict with valid moves.
+        # print(f"possible moves are {possible_moves}")
 
         if state_key not in self.q_table:
             self.q_table[state_key] = {action: 0.0 for action in possible_moves}
@@ -56,30 +39,16 @@ class QLearningAgent(Agent):
             if possible_moves:
                 return np.random.choice(list(possible_moves.keys()))
             else:
+                print("no possible moves found")
+                exit(0)
                 return np.random.choice(self.action_space)
 
         q_values = self.q_table[state_key]
         max_q = max(q_values[action] for action in possible_moves)
         best_actions = [action for action in possible_moves if q_values[action] == max_q]
+        # print(f"best action to choose is {np.random.choice(best_actions)}")
         return np.random.choice(best_actions)
 
-
-    # def update(self, state, action, reward, next_state, done):
-    #     """Update Q-table using the Q-learning formula."""
-    #     if state not in self.q_table:
-    #         self.q_table[state] = {a: 0.0 for a in range(len(self.action_space))}
-
-    #     if next_state not in self.q_table:
-    #         # self.q_table[next_state] = {a: 0.0 for a in range(len(self.action_space))}
-    #         self.q_table[state] = {a: 0.0 for a in range(self.env.action_space.n)}
-
-    #     max_q = self.q_table[next_state][max(self.q_table[next_state], key=lambda x: self.q_table[next_state][x])]
-
-    #     td_error = reward + self.discount_factor * max_q - self.q_table[state][action]
-
-    #     self.q_table[state][action] += self.learning_rate * td_error
-
-    #     return td_error
     def update(self, state, action, reward, next_state, done):
         state_key = self.get_state_key(state)
         next_state_key = self.get_state_key(next_state)
@@ -146,8 +115,8 @@ class QLearningAgent(Agent):
         done = np.array_equal(self.env.state, self.env.goal_state)
         steps = 0
 
-        # while not done:
-        while not done and steps < 100:
+        while not done:
+        # while not done and steps < 100:
             state = self.env.state.flatten()
             # print(state)
             state_key = self.get_state_key(state)
@@ -169,31 +138,82 @@ class QLearningAgent(Agent):
                 break
 
         return solution_states
+    
+    def print_q_table(self):
+        table = self.q_table
+        for state_key, action_values in table.items():
+            # Convert state_key from tuple of np.int64 to tuple of ints
+            state = tuple(int(x) for x in state_key)
+            print(f"State: {state}")
+            for action, q_val in action_values.items():
+                # Convert q_val to a float if it is a numpy array
+                if isinstance(q_val, np.ndarray):
+                    q_val = q_val.item()
+                print(f"  Action {action}: {q_val}")
+            print("-" * 40)
+
+
+    def solve_row_by_row(self, puzzle):
+        n = self.env.puzzle_size
+        for i in range(n):
+            goal_state_n = self.create_goal_array_by_row(n, i+1)
+            simplified_puzzle = self.mask_by_cumulative_rows(puzzle, i+1)
+            # solve for this simplyed puzzles.
+            
+                 
+    def create_goal_array_by_row(self, n, row):
+        # Create an n x n array filled with -1
+        arr = np.full((n, n), -1)
         
+        # Fill the selected row with consecutive numbers starting from 1
+        start_num = (row - 1) * n + 1
+        arr[row - 1] = np.arange(start_num, start_num + n)
         
+        # Set the last element of the last row to 0
+        arr[-1, -1] = 0
+        
+        return arr
+    
+    def mask_by_cumulative_rows(self, arr, row):
+        # Create a masked array filled with -1
+        masked = np.full(arr.shape, -1)
+        
+        # Determine the cumulative row elements from a sorted array (1-counted)
+        sorted_arr = np.sort(arr[arr != 0])  # Exclude zero before sorting
+        cumulative_elements = sorted_arr[:row * arr.shape[1]]
+        
+        # Keep only elements from cumulative_elements and 0
+        for i in range(arr.shape[0]):
+            for j in range(arr.shape[1]):
+                if arr[i, j] in cumulative_elements or arr[i, j] == 0:
+                    masked[i, j] = arr[i, j]
+        
+        return masked
+
 from puzzle_env import SlidingPuzzleEnv
 
 env = SlidingPuzzleEnv(size=3)
-# agent = QLearningAgent
 agent = QLearningAgent(
         game_env=env,
         learning_rate=0.1,
-        discount_factor=0.95,
+        discount_factor=0.99,
         exploration_rate=1.0,
-        epsilon_decay_rate=0.995,
+        epsilon_decay_rate=0.95,
         min_epsilon=0.01
     )
 
+
+print(f"goal state is {agent.env.goal_state}")
 print("Generating a new puzzle...")
 agent.env.generate_puzzle()
 print(agent.env.puzzle_to_solve)
 
 print("Training the agent...")
-agent.train(100)
+agent.train(1000)
 
 print("Solving the puzzle...")
 solved = agent.solve(agent.env.puzzle_to_solve)
 for i in solved:
     print(i)
     
-print(agent.q_table)
+agent.print_q_table(agent.q_table)
