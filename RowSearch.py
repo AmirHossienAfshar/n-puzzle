@@ -1,12 +1,5 @@
 import numpy as np
-from enum import Enum
 import heapq
-
-class Move(Enum):
-    UP = 0
-    DOWN = 1
-    LEFT = 2
-    RIGHT = 3
 
 class EnhancedSearch:
     def __init__(self, env):
@@ -20,8 +13,20 @@ class EnhancedSearch:
         start_num = (row - 1) * n + 1
         arr[row - 1] = np.arange(start_num, start_num + n)
         
-        arr[-1, -1] = 0
-        return arr
+        goals = []
+
+        if n == row:
+            arr[-1, -1] = 0
+            goals.append(arr)
+            return goals
+            
+        for i in range(row, n):      # unsolved row indices
+            for j in range(n):       # all columns in that row
+                new_goal = arr.copy()
+                new_goal[i, j] = 0
+                goals.append(new_goal)
+        
+        return goals
     
     def mask_by_cumulative_rows(self, arr, row): #this one is fine
         arr = np.array(arr).reshape(self.env.size, self.env.size)
@@ -45,9 +50,9 @@ class EnhancedSearch:
         size = self.env.size
         distance = 0
         
-        # Flatten the arrays into 1D for easy indexing
         puzzle_flat = puzzle.ravel()
-        goal_flat = goal_puzzle.ravel()
+        heuristic_goal = goal_puzzle[-1]
+        goal_flat = heuristic_goal.ravel()
         
         for index, tile in enumerate(puzzle_flat):
             if tile == 0 or tile == -1:  # Ignore the blank or masked tiles
@@ -136,25 +141,29 @@ class EnhancedSearch:
         """
         Solve a simplified puzzle using A* search.
         :param puzzle: np.array (Simplified puzzle)
-        :param goal: np.array (Goal state)
+        :param goal: List of np.array (Possible goal states)
         :return: List of moves [(state, move)]
         """
         if steps_so_far:
             puzzle = self.apply_steps(puzzle, steps_so_far)
+
         print(f"Solving row for puzzle:\n{puzzle}")
         print(f"Target goal:\n{goal}")
-        
+
         path = self.a_star_search(puzzle, goal)
-        
-        if path:
-            print(f"Solved row with {len(path)} steps!")
-            for step, (state, move) in enumerate(path, 1):
-                print(f"Step {step} (Move {move}):")
-                print(state)
-                print("-" * 20)
-        else:
+
+        if path is None:
             print("No solution found for this row.")
-        
+            return []
+
+        if len(path) == 0:
+            print("Already solved! No moves needed.")
+            return []
+
+        print(f"Solved row with {len(path)} steps!")
+        for step, (state, move) in enumerate(path, 1):
+            print(f"Step {step} (Move {move}):\n{state}\n{'-' * 20}")
+
         return path
 
             
@@ -175,34 +184,35 @@ class EnhancedSearch:
             
         return solve_steps
                 
-    
+ 
     def a_star_search(self, start, goal):
         """
         Perform A* search from start to goal using Manhattan distance.
         :param start: np.array (start puzzle state)
-        :param goal: np.array (goal puzzle state)
+        :param goal: List of np.array (goal puzzle states)
         :return: List of moves [(puzzle, move)] from start to goal
         """
-        # Priority queue (min-heap) for open states
+        
+        if any(np.array_equal(start, g) for g in goal):
+            return []
+        
         open_list = []
         
-        # Record visited states with their cost
+        goal_bytes_set = {g.tobytes() for g in goal}
+
         g_score = {start.tobytes(): 0}
         f_score = {start.tobytes(): self.manhattan_distance(start, goal)}
 
-        # Push starting state with priority = f_score
         heapq.heappush(open_list, (f_score[start.tobytes()], 0, start.tobytes(), []))
 
         visited = set()
-
-        goal_bytes = goal.tobytes()
 
         while open_list:
             _, cost, current_bytes, path = heapq.heappop(open_list)
             current_state = np.frombuffer(current_bytes, dtype=start.dtype).reshape(start.shape)
 
-            if current_bytes == goal_bytes:
-                return path  # Return the path once goal is found
+            if current_bytes in goal_bytes_set:
+                return path
 
             if current_bytes in visited:
                 continue
@@ -210,7 +220,7 @@ class EnhancedSearch:
 
             for neighbor, move in self.get_neighbors(current_state):
                 neighbor_bytes = neighbor.tobytes()
-                tentative_g = cost + 1  # Cost of move is always 1
+                tentative_g = cost + 1
 
                 if neighbor_bytes not in g_score or tentative_g < g_score[neighbor_bytes]:
                     g_score[neighbor_bytes] = tentative_g
@@ -218,19 +228,19 @@ class EnhancedSearch:
                     new_path = path + [(neighbor, move)]
                     heapq.heappush(open_list, (f_score[neighbor_bytes], tentative_g, neighbor_bytes, new_path))
 
-        return []  # Return empty path if no solution is found
-
+        return []
             
             
 from puzzle_env import SlidingPuzzleEnv
 
-env = SlidingPuzzleEnv(size=3)
+env = SlidingPuzzleEnv(size=4)
 agent = EnhancedSearch(env)
 
 env.generate_puzzle()
 solve_steps = agent.solve()
 
 print("\n===== Solution Steps =====\n")
+print(agent.env.puzzle_to_solve)
 
 for step, (state, move) in enumerate(solve_steps, 1):
     print(f"Step {step}: Move {move}\n")
