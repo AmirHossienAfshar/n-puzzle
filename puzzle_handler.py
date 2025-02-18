@@ -42,7 +42,8 @@ class PuzzleBridge(QObject):
         self.agent = None
         self.train_progress = 0.0
         self.train_episode_num = 1000
-        self.invoke_start = True
+        self.invoke_start = False
+        self.invoke_generate = True
 
     def set_puzzle_list(self, value):
         self.puzzle_list = value
@@ -66,8 +67,15 @@ class PuzzleBridge(QObject):
     def get_agent_training_progress(self):
         return self.train_progress
     
-    def set_invoke_start_btn(self, value): # this is either setted invokable when the training done, or when the model is setted to the A*
-                                            # needs to be handelds. initially is setted to true for now.
+    def set_invoke_start_btn(self, value): 
+        '''
+        makes sure to be started only if there is a puzzle generated: on the self.generate_new_puzzle func.
+            self.set_invoke_start_btn(True)
+        also, when the puzzle is solved, is being setted to false: on the solve func
+            self.set_invoke_start_btn(False)
+        
+        also, for rl agents, is enabled only if the training is done. -> to-do
+        '''
         self.invoke_start = value
         self.invoke_start_btn_changed.emit()
         
@@ -75,12 +83,14 @@ class PuzzleBridge(QObject):
         return self.invoke_start
     
     def set_invoke_generate_btn(self, value):
-        '''while solving the agent, makes sure that new puzzle is not tended to be generated.'''
-        self.invoke_start = value
+        '''
+        while solving the agent, makes sure that new puzzle is not tended to be generated.
+        '''
+        self.invoke_generate = value
         self.invoke_generate_btn_changed.emit()
         
     def get_invoke_generate_btn(self):
-        return self.invoke_start
+        return self.invoke_generate
     
     pyside_invoke_generate_btn = Property(bool, get_invoke_generate_btn, set_invoke_generate_btn, notify=invoke_generate_btn_changed)
     pyside_invoke_start_btn = Property(bool, get_invoke_start_btn, set_invoke_start_btn, notify=invoke_start_btn_changed)
@@ -91,6 +101,7 @@ class PuzzleBridge(QObject):
     def generate_new_puzzle(self):
         state = self.environment.generate_puzzle().flatten()
         self.set_puzzle_list(state.tolist()) # each puzzle that is setted here, is going to be the one that is solved.
+        self.set_invoke_start_btn(True)
         
     def train_agent(self): # to-do: all RL agents must contain the same format of training.
         # self.agent = QLearningAgent(self.environment) ### this part has to be handled. 
@@ -124,7 +135,6 @@ class PuzzleBridge(QObject):
         for arr_ in solved_array:
             time.sleep(1 / self.step_per_sec)
             self.set_puzzle_list(arr_)
-        self.set_invoke_start_btn(True)
         self.set_invoke_generate_btn(True)
         print("finished rendering.")
         
