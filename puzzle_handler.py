@@ -5,12 +5,14 @@ import time
 import random
 from puzzle_env import SlidingPuzzleEnv
 from QlearningAgent import QLearningAgent
+from A_StarAgent import AStarSolver
 
 class PuzzleBridge(QObject):
     puzzle_list_changed = Signal()
     puzzle_size_changed = Signal()
     agent_training_progress_changed = Signal()
     invoke_start_btn_changed = Signal()
+    invoke_generate_btn_changed = Signal()
     
     _instance = None  # Singleton instance
     
@@ -40,12 +42,12 @@ class PuzzleBridge(QObject):
         self.agent = None
         self.train_progress = 0.0
         self.train_episode_num = 1000
-        self.invoke_start = True
+        self.invoke_start = False
+        self.invoke_generate = True
 
     def set_puzzle_list(self, value):
         self.puzzle_list = value
         self.puzzle_list_changed.emit()
-        print(value)
         
     def get_puzzle_list(self):
         return self.puzzle_list
@@ -65,26 +67,81 @@ class PuzzleBridge(QObject):
     def get_agent_training_progress(self):
         return self.train_progress
     
-    def set_invoke_start_btn(self, value): # this is either setted invokable when the training done, or when the model is setted to the A*
-                                            # needs to be handelds. initially is setted to true for now.
+    def set_invoke_start_btn(self, value): 
+        '''
+        makes sure to be started only if there is a puzzle generated: on the self.generate_new_puzzle func.
+            self.set_invoke_start_btn(True)
+        also, when the puzzle is solved, is being setted to false: on the solve func
+            self.set_invoke_start_btn(False)
+        
+        also, for rl agents, is enabled only if the training is done. -> to-do
+        '''
         self.invoke_start = value
         self.invoke_start_btn_changed.emit()
         
     def get_invoke_start_btn(self):
         return self.invoke_start
     
+    def set_invoke_generate_btn(self, value):
+        '''
+        while solving the agent, makes sure that new puzzle is not tended to be generated.
+        '''
+        self.invoke_generate = value
+        self.invoke_generate_btn_changed.emit()
+        
+    def get_invoke_generate_btn(self):
+        return self.invoke_generate
+    
+    pyside_invoke_generate_btn = Property(bool, get_invoke_generate_btn, set_invoke_generate_btn, notify=invoke_generate_btn_changed)
     pyside_invoke_start_btn = Property(bool, get_invoke_start_btn, set_invoke_start_btn, notify=invoke_start_btn_changed)
     pyside_training_progress = Property(float, get_agent_training_progress, set_agent_training_progress, notify=agent_training_progress_changed)
     pyside_puzzle_list = Property(list, get_puzzle_list, set_puzzle_list, notify=puzzle_list_changed)
     pyside_puzzle_size = Property(int, get_puzzle_size, set_puzzle_size, notify=puzzle_size_changed)
+            
+    def generate_new_puzzle(self):
+        state = self.environment.generate_puzzle().flatten()
+        self.set_puzzle_list(state.tolist()) # each puzzle that is setted here, is going to be the one that is solved.
+        self.set_invoke_start_btn(True)
+        
+    def train_agent(self): # to-do: all RL agents must contain the same format of training.
+        # self.agent = QLearningAgent(self.environment) ### this part has to be handled. 
+        self.agent = QLearningAgent(
+            game_env=self.environment,
+            learning_rate=0.1,
+            discount_factor=0.95,   
+            exploration_rate=1.0,
+            epsilon_decay_rate=0.995,
+            min_epsilon=0.01
+        )
+        self.agent.train(self.train_episode_num)
+        
+    def sovle_puzzle(self):
+        print("start is triggered")
+        self.solve_puzzle_A_star()
+        
+    def solve_puzzle_A_star(self): # to-do: integerate all solvers in a single format, so there wouldn't be a need to do all those in seperated funcs.
+        self.agent = AStarSolver(env=self.environment)
+        solution_steps = self.agent.solve()
+        if solution_steps != None:
+            only_states = [state for state, _ in solution_steps]
+        else:
+            self.invoke_error()
+        t = threading.Thread(target=self.render, args=(only_states,), daemon=True)
+        t.start()
+        
+    def render(self, solved_array):
+        self.set_invoke_start_btn(False)
+        self.set_invoke_generate_btn(False)
+        for arr_ in solved_array:
+            time.sleep(1 / self.step_per_sec)
+            self.set_puzzle_list(arr_)
+        self.set_invoke_generate_btn(True)
+        print("finished rendering.")
+        
+    def main_func(self):
+        # self.test_progress_bar()
+        pass
     
-    def updated_model_elemnt(self, new_puzzle_list): # probebly won't be needed in the final version
-        for i in range(self.puzzle_size):
-            if self.puzzle_list[i] != new_puzzle_list[i]:
-                self.puzzle_list[i] = new_puzzle_list[i]
-                self.puzzle_list_changed.emit()
-                time.sleep(0.2)
-                
     def test_puzzle(self, steps=10):
         n = self.puzzle_size
         puzzle = np.arange(1, n*n+1).reshape(n, n)
@@ -152,48 +209,3 @@ class PuzzleBridge(QObject):
         for i in range(101):
             time.sleep(0.1)
             self.set_agent_training_progress(i/100)
-            
-    def generate_new_puzzle(self):
-        state = self.environment.generate_puzzle().flatten()
-        self.set_puzzle_list(state.tolist()) # each puzzle that is setted here, is going to be the one that is solved.
-        
-    def train_agent(self):
-        # self.agent = QLearningAgent(self.environment) ### this part has to be handled. 
-        self.agent = QLearningAgent(
-            game_env=self.environment,
-            learning_rate=0.1,
-            discount_factor=0.95,   
-            exploration_rate=1.0,
-            epsilon_decay_rate=0.995,
-            min_epsilon=0.01
-        )
-        self.agent.train(self.train_episode_num)
-        
-    def sovle_puzzle(self):
-        puzzle_to_solve = self.environment.get_puzzle_to_solve()
-        solution_steps = self.agent.solve(puzzle_to_solve)
-        self.render(solution_steps)
-        
-    def render(self, solved_array):
-        for arr_ in solved_array:
-            self.set_puzzle_list(solved_array)
-            time.sleep(1 // self.step_per_sec)
-        
-    def main_func(self):
-        self.test_progress_bar()
-        
-        # self.puzzle_size = 5
-        # self.environment = SlidingPuzzleEnv(self.puzzle_size)
-        # state = self.environment.render().flatten()
-        # self.set_puzzle_list(state.tolist())
-        
-        # generated_states = self.test_puzzle(10)
-        # for state in generated_states:
-        #     self.set_puzzle_list(state)
-        #     time.sleep(0.5)
-        
-        # generated_states = self.test_puzzle_flat(1000)
-        # for state in generated_states:
-        #     self.set_puzzle_list(state)
-        #     # print(state)
-        #     time.sleep(0.05)
