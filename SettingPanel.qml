@@ -76,7 +76,7 @@ Item {
                     ComboBox {
                         id: agentComboBox
                         Layout.fillWidth: true
-                        model: ["Q-Learning", "A*", "Sarsa"]
+                        model: ["Q-Learning", "A*", "Sarsa", "row greedy"]
                     }
                     Label {
                         text: "Solver speed (step/sec):"
@@ -158,7 +158,9 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     enabled: agentComboBox.currentText === "A*" // this one has to be overrided with the properity alias. has problems...
                     onClicked: {
-                        // settings.setting_start_solver()
+                        settings.setting_set_solver_speed(solverSpeedComboBox.currentText)
+                        settings.setting_initiate_solve_puzzle()
+                        
                     }
                 }
             }

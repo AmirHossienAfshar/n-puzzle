@@ -2,6 +2,8 @@ import heapq
 import numpy as np
 from puzzle_env import SlidingPuzzleEnv
 
+MAX_ITERATIONS = 10000
+
 class AStarSolver:
     def __init__(self, env, heuristic="manhattan"):
         self.env = env
@@ -101,6 +103,10 @@ class AStarSolver:
         while open_set:
             iteration += 1
             f_score, g_score, current, path = heapq.heappop(open_set)
+            
+            if iteration > MAX_ITERATIONS:
+                print(f"Terminating search after {MAX_ITERATIONS} iterations (limit reached).")
+                return None
             
             if current == goal_state:
                 print(f"Solution found after {iteration} iterations, steps: {len(path)}")
