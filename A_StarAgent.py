@@ -93,7 +93,8 @@ class AStarSolver:
         
         # Open set: each item is (f_score, g_score, state, path)
         start_h = self.heuristic_func(initial_state, goal_state, size)
-        open_set = [(start_h, 0, initial_state, [initial_state])]
+        # open_set = [(start_h, 0, initial_state, [initial_state])]
+        open_set = [(start_h, 0, initial_state, [(initial_state, None)])]  # Fix: Store moves
         visited = set()
         iteration = 0
         
@@ -103,7 +104,8 @@ class AStarSolver:
             
             if current == goal_state:
                 print(f"Solution found after {iteration} iterations, steps: {len(path)}")
-                return [list(state) for state in path]
+                # return [list(state) for state in path]
+                return [(list(state), move) for state, move in path]
             
             if current in visited:
                 continue
@@ -119,7 +121,9 @@ class AStarSolver:
                 tentative_g = g_score + 1  # each move costs 1
                 h = self.heuristic_func(neighbor, goal_state, size)
                 f = tentative_g + h
-                heapq.heappush(open_set, (f, tentative_g, neighbor, path + [neighbor]))
+                # heapq.heappush(open_set, (f, tentative_g, neighbor, path + [neighbor]))
+                heapq.heappush(open_set, (f, tentative_g, neighbor, path + [(neighbor, move)]))
+
         
         print("No solution found!")
         return None
