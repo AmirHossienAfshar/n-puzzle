@@ -2,12 +2,11 @@ import heapq
 import numpy as np
 from puzzle_env import SlidingPuzzleEnv
 
-MAX_ITERATIONS = 10000
-
 class AStarSolver:
-    def __init__(self, env, heuristic="manhattan"):
+    def __init__(self, env, heuristic="manhattan", max_explored_states=10000):
         self.env = env
-        self.log_interval = 100
+        self.log_interval = 1000
+        self.max_explored_states = max_explored_states
         
         if heuristic == "manhattan":
             self.heuristic_func = self.manhattan_distance
@@ -77,7 +76,16 @@ class AStarSolver:
         and the goal state is created using env._generate_goal_state().
         
         Returns:
-            A list of states (each as a list) representing the solution path.
+            list: A list of tuples, where each tuple contains:
+                  - A state (as a list) representing the puzzle configuration.
+                  - The move that led to this state.
+
+        Attributes:
+            visited (set): A set of unique states that have already been expanded. 
+                           This prevents revisiting the same state and speeds up the search.
+        
+            explored_states (int): The total number of states removed from the open set and processed. 
+                                   This counts how many states the algorithm has explored in total.
         """
         # Get the initial state.
         if self.env.puzzle_to_solve is None:
@@ -98,18 +106,18 @@ class AStarSolver:
         # open_set = [(start_h, 0, initial_state, [initial_state])]
         open_set = [(start_h, 0, initial_state, [(initial_state, None)])]  # Fix: Store moves
         visited = set()
-        iteration = 0
+        explored_states = 0
         
         while open_set:
-            iteration += 1
+            explored_states += 1
             f_score, g_score, current, path = heapq.heappop(open_set)
             
-            if iteration > MAX_ITERATIONS:
-                print(f"Terminating search after {MAX_ITERATIONS} iterations (limit reached).")
+            if explored_states > self.max_explored_states:
+                print(f"Terminating search after {self.max_explored_states} explored_states (limit reached).")
                 return None
             
             if current == goal_state:
-                print(f"Solution found after {iteration} iterations, steps: {len(path)}")
+                print(f"Solution found after {explored_states} explore states, steps: {len(path)}")
                 # return [list(state) for state in path]
                 return [(list(state), move) for state, move in path]
             
@@ -118,8 +126,8 @@ class AStarSolver:
             visited.add(current)
             
             # Log progress every log_interval iterations.
-            if iteration % self.log_interval == 0:
-                print(f"Iteration {iteration}: open_set size = {len(open_set)}, current f_score = {f_score}, visited = {len(visited)}")
+            if explored_states % self.log_interval == 0:
+                print(f"explored states {explored_states}: open_set size = {len(open_set)}, current f_score = {f_score}, visited = {len(visited)}")
             
             for neighbor, move in self.get_neighbors(current, size):
                 if neighbor in visited:
