@@ -3,7 +3,7 @@ import threading
 import numpy as np
 import time
 import random
-from puzzle_env import SlidingPuzzleEnv
+from Puzzle_env import SlidingPuzzleEnv
 from QlearningAgent import QLearningAgent
 from A_StarAgent import AStarSolver
 

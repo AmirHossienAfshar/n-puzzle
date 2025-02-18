@@ -1,6 +1,6 @@
 import heapq
 import numpy as np
-from puzzle_env import SlidingPuzzleEnv
+from Puzzle_env import SlidingPuzzleEnv
 
 class AStarSolver:
     def __init__(self, env, heuristic="manhattan", max_explored_states=10000):

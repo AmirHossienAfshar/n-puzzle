@@ -173,7 +173,7 @@ class DQNAgent:
 
 
 if __name__ == "__main__":
-    from puzzle_env import SlidingPuzzleEnv  # Ensure you have your environment module.
+    from Puzzle_env import SlidingPuzzleEnv  # Ensure you have your environment module.
         
     env = SlidingPuzzleEnv(size=4)
     print("Goal state is:")

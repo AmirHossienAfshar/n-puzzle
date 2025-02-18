@@ -190,30 +190,30 @@ class QLearningAgent(Agent):
         
         return masked
 
-from puzzle_env import SlidingPuzzleEnv
+# from Puzzle_env import SlidingPuzzleEnv
 
-env = SlidingPuzzleEnv(size=3)
-agent = QLearningAgent(
-        game_env=env,
-        learning_rate=0.1,
-        discount_factor=0.99,
-        exploration_rate=1.0,
-        epsilon_decay_rate=0.95,
-        min_epsilon=0.01
-    )
+# env = SlidingPuzzleEnv(size=3)
+# agent = QLearningAgent(
+#         game_env=env,
+#         learning_rate=0.1,
+#         discount_factor=0.99,
+#         exploration_rate=1.0,
+#         epsilon_decay_rate=0.95,
+#         min_epsilon=0.01
+#     )
 
 
-print(f"goal state is {agent.env.goal_state}")
-print("Generating a new puzzle...")
-agent.env.generate_puzzle()
-print(agent.env.puzzle_to_solve)
+# print(f"goal state is {agent.env.goal_state}")
+# print("Generating a new puzzle...")
+# agent.env.generate_puzzle()
+# print(agent.env.puzzle_to_solve)
 
-print("Training the agent...")
-agent.train(1000)
+# print("Training the agent...")
+# agent.train(1000)
 
-print("Solving the puzzle...")
-solved = agent.solve(agent.env.puzzle_to_solve)
-for i in solved:
-    print(i)
+# print("Solving the puzzle...")
+# solved = agent.solve(agent.env.puzzle_to_solve)
+# for i in solved:
+#     print(i)
     
-agent.print_q_table(agent.q_table)
+# agent.print_q_table(agent.q_table)
