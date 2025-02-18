@@ -12,6 +12,7 @@ class PuzzleBridge(QObject):
     puzzle_size_changed = Signal()
     agent_training_progress_changed = Signal()
     invoke_start_btn_changed = Signal()
+    invoke_generate_btn_changed = Signal()
     
     _instance = None  # Singleton instance
     
@@ -73,11 +74,64 @@ class PuzzleBridge(QObject):
     def get_invoke_start_btn(self):
         return self.invoke_start
     
+    def set_invoke_generate_btn(self, value):
+        '''while solving the agent, makes sure that new puzzle is not tended to be generated.'''
+        self.invoke_start = value
+        self.invoke_generate_btn_changed.emit()
+        
+    def get_invoke_generate_btn(self):
+        return self.invoke_start
+    
+    pyside_invoke_generate_btn = Property(bool, get_invoke_generate_btn, set_invoke_generate_btn, notify=invoke_generate_btn_changed)
     pyside_invoke_start_btn = Property(bool, get_invoke_start_btn, set_invoke_start_btn, notify=invoke_start_btn_changed)
     pyside_training_progress = Property(float, get_agent_training_progress, set_agent_training_progress, notify=agent_training_progress_changed)
     pyside_puzzle_list = Property(list, get_puzzle_list, set_puzzle_list, notify=puzzle_list_changed)
     pyside_puzzle_size = Property(int, get_puzzle_size, set_puzzle_size, notify=puzzle_size_changed)
-                
+            
+    def generate_new_puzzle(self):
+        state = self.environment.generate_puzzle().flatten()
+        self.set_puzzle_list(state.tolist()) # each puzzle that is setted here, is going to be the one that is solved.
+        
+    def train_agent(self): # to-do: all RL agents must contain the same format of training.
+        # self.agent = QLearningAgent(self.environment) ### this part has to be handled. 
+        self.agent = QLearningAgent(
+            game_env=self.environment,
+            learning_rate=0.1,
+            discount_factor=0.95,   
+            exploration_rate=1.0,
+            epsilon_decay_rate=0.995,
+            min_epsilon=0.01
+        )
+        self.agent.train(self.train_episode_num)
+        
+    def sovle_puzzle(self):
+        print("start is triggered")
+        self.solve_puzzle_A_star()
+        
+    def solve_puzzle_A_star(self): # to-do: integerate all solvers in a single format, so there wouldn't be a need to do all those in seperated funcs.
+        self.agent = AStarSolver(env=self.environment)
+        solution_steps = self.agent.solve()
+        if solution_steps != None:
+            only_states = [state for state, _ in solution_steps]
+        else:
+            self.invoke_error()
+        t = threading.Thread(target=self.render, args=(only_states,), daemon=True)
+        t.start()
+        
+    def render(self, solved_array):
+        self.set_invoke_start_btn(False)
+        self.set_invoke_generate_btn(False)
+        for arr_ in solved_array:
+            time.sleep(1 / self.step_per_sec)
+            self.set_puzzle_list(arr_)
+        self.set_invoke_start_btn(True)
+        self.set_invoke_generate_btn(True)
+        print("finished rendering.")
+        
+    def main_func(self):
+        # self.test_progress_bar()
+        pass
+    
     def test_puzzle(self, steps=10):
         n = self.puzzle_size
         puzzle = np.arange(1, n*n+1).reshape(n, n)
@@ -145,45 +199,3 @@ class PuzzleBridge(QObject):
         for i in range(101):
             time.sleep(0.1)
             self.set_agent_training_progress(i/100)
-            
-    def generate_new_puzzle(self):
-        state = self.environment.generate_puzzle().flatten()
-        self.set_puzzle_list(state.tolist()) # each puzzle that is setted here, is going to be the one that is solved.
-        
-    def train_agent(self): # to-do: all RL agents must contain the same format of training.
-        # self.agent = QLearningAgent(self.environment) ### this part has to be handled. 
-        self.agent = QLearningAgent(
-            game_env=self.environment,
-            learning_rate=0.1,
-            discount_factor=0.95,   
-            exploration_rate=1.0,
-            epsilon_decay_rate=0.995,
-            min_epsilon=0.01
-        )
-        self.agent.train(self.train_episode_num)
-        
-    def sovle_puzzle(self):
-        print("start is triggered")
-        self.solve_puzzle_A_star()
-        
-    def solve_puzzle_A_star(self): # to-do: integerate all solvers in a single format, so there wouldn't be a need to do all those in seperated funcs.
-        self.agent = AStarSolver(env=self.environment)
-        solution_steps = self.agent.solve()
-        if solution_steps != None:
-            only_states = [state for state, _ in solution_steps]
-        else:
-            self.invoke_error()
-        t = threading.Thread(target=self.render, args=(only_states,), daemon=True)
-        t.start()
-        
-    def render(self, solved_array):
-        self.set_invoke_start_btn(False)
-        for arr_ in solved_array:
-            time.sleep(1 / self.step_per_sec)
-            self.set_puzzle_list(arr_)
-        self.set_invoke_start_btn(True)
-        print("finished rendering.")
-        
-    def main_func(self):
-        # self.test_progress_bar()
-        pass

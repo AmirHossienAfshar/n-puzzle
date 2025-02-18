@@ -11,6 +11,8 @@ ApplicationWindow {
 
     Pyside_Bridge_class {
         id: bridge
+        // pyside_invoke_generate_btn
+        // pyside_invoke_start_btn
     }
 
     property int gridSize: bridge.pyside_puzzle_size
@@ -35,6 +37,7 @@ ApplicationWindow {
             Layout.fillHeight: true
             trainingProgressValue: bridge.pyside_training_progress
             startSolverEnabled: bridge.pyside_invoke_start_btn
+            generatePuzzleEnabled: bridge.pyside_invoke_generate_btn
         }
     }
 }

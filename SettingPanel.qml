@@ -6,6 +6,7 @@ import Pyside_Setting 1.0
 Item {
     property alias trainingProgressValue: trainValue.value
     property alias startSolverEnabled: startSolverButton.enabled
+    property alias generatePuzzleEnabled: generatePuzzleBtn.enabled
 
     id: settingsPanel
     Pyside_Setting_class {
@@ -42,6 +43,7 @@ Item {
                     }
                 }
                 Button {
+                    id: generatePuzzleBtn
                     text: "Generate Puzzle!"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
