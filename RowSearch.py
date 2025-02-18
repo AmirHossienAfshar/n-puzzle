@@ -4,7 +4,8 @@ import heapq
 class EnhancedSearch:
     def __init__(self, env):
         self.env = env
-        self.current_goal = np.full((env.size, env.size), -1)  # important: if it is considerd that the object kept alive, then be setted to defualt each time a new puzzle is made
+        self.current_goal = np.full((env.size, env.size), -1)  
+        # important: if it is considerd that the object kept alive, then be setted to defualt each time a new puzzle is made
         self.g_n = 0
         self.h_n = 0
                            
@@ -229,11 +230,11 @@ class EnhancedSearch:
                     heapq.heappush(open_list, (f_score[neighbor_bytes], tentative_g, neighbor_bytes, new_path))
 
         return []
-            
+        
             
 from puzzle_env import SlidingPuzzleEnv
 
-env = SlidingPuzzleEnv(size=4)
+env = SlidingPuzzleEnv(size=3)
 agent = EnhancedSearch(env)
 
 env.generate_puzzle()
