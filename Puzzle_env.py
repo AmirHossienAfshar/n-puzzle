@@ -16,6 +16,10 @@ class SlidingPuzzleEnv(gym.Env):
         self.goal_state = self._generate_goal_state()
         self.state = self._shuffle_board()
         self.puzzle_to_solve = None
+        
+        # self.state_history = []
+        # self.max_history_length = 50  # Number of steps to track
+        # self.loop_threshold = 10       # Number of repeats to consider as a loop
 
         # 4 possible moves: Up, Down, Left, Right
         self.action_space = spaces.Discrete(4) ########################################### is this part consistent to the other explanations?
@@ -46,17 +50,53 @@ class SlidingPuzzleEnv(gym.Env):
         while not self.is_solvable(board):
             np.random.shuffle(board)
         return board.reshape(self.size, self.size)
+    
+    def is_solvable(self, board: np.ndarray) -> bool:
+        """
+        Determines if a given sliding puzzle configuration is solvable based on inversion count and 
+        the position of the empty tile.
 
-    def is_solvable(self, board):
-        """Check solvability using inversion count. even inversion counts means solvable."""
-        board_list = board[board != 0]
+        Solvability Rules:
+        - If N (grid size) is odd, the puzzle is solvable if the number of inversions is even.
+        - If N is even:
+        - If the blank tile is on an even row from the bottom (2nd-last, 4th-last, ...), 
+            the puzzle is solvable if the number of inversions is odd.
+        - If the blank tile is on an odd row from the bottom (last, 3rd-last, ...), 
+            the puzzle is solvable if the number of inversions is even.
+
+        Parameters:
+        -----------
+        board : np.ndarray
+            A flattened 1D representation of the puzzle grid.
+
+        Returns:
+        --------
+        bool
+            True if the puzzle is solvable, False otherwise.
+        """
+        board_list = board[board != 0]  # Remove the empty tile (0) for inversion counting
         inv_count = sum(
             board_list[i] > board_list[j]
             for i in range(len(board_list))
             for j in range(i + 1, len(board_list))
         )
-        return inv_count % 2 == 0
-    
+
+        n = self.size  # Grid size (N x N)
+        
+        # Locate the empty tile (0)
+        empty_tile_index = np.where(board == 0)[0][0]
+        empty_tile_row = empty_tile_index // n  # Row index (0-based)
+        blank_row_from_bottom = n - empty_tile_row  # Row position from bottom (1-based)
+
+        if n % 2 == 1:  # Odd grid size
+            return inv_count % 2 == 0
+        else:  # Even grid size
+            if blank_row_from_bottom % 2 == 0:  # Blank tile on even row from bottom
+                return inv_count % 2 == 1  # Must have odd inversions
+            else:  # Blank tile on odd row from bottom
+                return inv_count % 2 == 0  # Must have even inversions
+
+
     def get_possible_moves(self):
         """Returns possible moves as action indices (0: Up, 1: Down, 2: Left, 3: Right)."""
         x, y = np.argwhere(self.state == 0)[0]
@@ -152,6 +192,7 @@ class SlidingPuzzleEnv(gym.Env):
     def reset(self):
         """Reset the board to a new shuffled state."""
         self.state = self._shuffle_board()
+        # self.state_history = []
         return self.state.flatten()
 
     def render(self, mode="human"): # this part has to be make sure, how that this render function is used in the main.py
@@ -163,3 +204,38 @@ class SlidingPuzzleEnv(gym.Env):
 # state = env.reset()
 # env.render()
 
+
+
+# import numpy as np
+
+# def is_solvable(board):
+#     """Check solvability of an N×N sliding puzzle."""
+#     N = int(np.sqrt(len(board)))  # Determine the grid size (assuming square grid)
+#     board = np.array(board).reshape((N, N))  # Reshape into N×N format
+    
+#     board_list = board.flatten()  # Convert to 1D list
+#     board_list = board_list[board_list != 0]  # Remove the blank (0)
+
+#     # Count inversions
+#     inv_count = sum(
+#         board_list[i] > board_list[j]
+#         for i in range(len(board_list))
+#         for j in range(i + 1, len(board_list))
+#     )
+
+#     if N % 2 == 1:  # Odd grid (3x3, 5x5, etc.)
+#         return inv_count % 2 == 0  # Solvable if even inversion count
+
+#     else:  # Even grid (4x4, 6x6, etc.)
+#         blank_row = N - np.where(board == 0)[0][0]  # Row index from bottom
+#         if (blank_row % 2 == 0):  # Blank is on an even row from bottom
+#             return inv_count % 2 == 1  # Inversion count must be odd
+#         else:  # Blank is on an odd row from bottom
+#             return inv_count % 2 == 0  # Inversion count must be even
+
+# # Given 4x4 puzzle board
+# puzzle_board = [1, 9, 13, 10, 12, 2, 14, 7, 11, 15, 3, 6, 0, 4, 5, 8]
+
+# # Check solvability
+# solvable = is_solvable(puzzle_board)
+# print(solvable)
