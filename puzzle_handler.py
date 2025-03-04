@@ -6,6 +6,16 @@ import random
 from Puzzle_env import SlidingPuzzleEnv
 from QlearningAgent import QLearningAgent
 from A_StarAgent import AStarSolver
+from RowSearch import EnhancedSearch
+from enum import Enum
+
+class AgentType(Enum):
+    Q_LEARNING = "Q_Learning"
+    SARSA = "Sarsa"
+    A_STAR = "A_star"
+    BLIND = "Blind"
+    HEURISTIC = "Heuristic"
+    GREEDY = "greedy"
 
 class PuzzleBridge(QObject):
     puzzle_list_changed = Signal()
@@ -115,11 +125,31 @@ class PuzzleBridge(QObject):
         )
         self.agent.train(self.train_episode_num)
         
-    def sovle_puzzle(self):
-        print("start is triggered")
-        self.solve_puzzle_A_star()
+    def solve_puzzle(self):
+        if self.agent_type is None:
+            print("Error: agent_type is not set!")
+            return
+        
+        print(f"Solver triggered with agent type of {self.agent_type}")
+
+        if self.agent_type == AgentType.A_STAR:     
+            print("A_star is about to get started...")
+            self.solve_puzzle_A_star()
+        elif self.agent_type == AgentType.GREEDY:
+            print("Greedy is about to get started...")
+            self.solve_puzzle_greedy()
+        else:
+            print(f"Error: Unsupported agent type {self.agent_type}")
+            
+    def solve_puzzle_greedy(self):
+        self.agent = EnhancedSearch(env=self.environment)
+        solution_steps = self.agent.solve()
+        print(solution_steps)
+        t = threading.Thread(target=self.render, args=(solution_steps,), daemon=True)
+        t.start()
         
     def solve_puzzle_A_star(self): # to-do: integerate all solvers in a single format, so there wouldn't be a need to do all those in seperated funcs.
+        print("strated solving by A start")
         self.agent = AStarSolver(env=self.environment)
         solution_steps = self.agent.solve()
         if solution_steps != None:
@@ -130,6 +160,7 @@ class PuzzleBridge(QObject):
         t.start()
         
     def render(self, solved_array):
+        print(solved_array)
         self.set_invoke_start_btn(False)
         self.set_invoke_generate_btn(False)
         for arr_ in solved_array:

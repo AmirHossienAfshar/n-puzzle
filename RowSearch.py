@@ -6,6 +6,7 @@ class EnhancedSearch:
         self.env = env
         self.current_goal = np.full((env.size, env.size), -1)  
         # important: if it is considerd that the object kept alive, then be setted to defualt each time a new puzzle is made
+        self.solve_states = []
                            
     def create_goal_array_by_row(self, n: int, row: int) -> list[np.ndarray]:
         """
@@ -266,24 +267,6 @@ class EnhancedSearch:
 
         return path
 
-            
-    # def solve(self): # old one, with parrity issue.
-    #     puzzle = self.env.puzzle_to_solve
-    #     n = self.env.size
-    #     solve_steps = []
-        
-    #     for i in range(1, n + 1):
-    #         goal_state_n = self.create_goal_array_by_row(n, i)
-    #         # if i == 1:
-    #         simplified_puzzle = self.mask_by_cumulative_rows(puzzle, i)
-    #         # Solve for this simplified puzzle (using A*).
-    #         steps = self.solve_row_by_row(simplified_puzzle, goal_state_n, solve_steps)
-    #         solve_steps += steps
-    #         # Update puzzle to the newly solved state.
-    #         # puzzle = goal_state_n
-            
-    #     return solve_steps
-
     def solve(self):
         puzzle = self.env.puzzle_to_solve
         n = self.env.size
@@ -307,8 +290,11 @@ class EnhancedSearch:
             simplified_puzzle = self.mask_by_cumulative_rows(puzzle, n)  # Mask both rows
             steps = self.solve_row_by_row(simplified_puzzle, last_two_rows_goal, solve_steps)
             solve_steps += steps
+            
+        self.solve_states = solve_steps
+        one_dim_solution = self.reconstruct_solution_steps()
         
-        return solve_steps
+        return one_dim_solution
 
     def create_goal_state_for_last_two_rows(self, n) -> list[np.ndarray]:
         """
@@ -368,21 +354,60 @@ class EnhancedSearch:
                     heapq.heappush(open_list, (f_score[neighbor_bytes], tentative_g, neighbor_bytes, new_path))
 
         return []
+    
+    def reconstruct_solution_steps(self):
+        """
+        Reconstructs the sequence of solved steps in a 1D flattened format by applying 
+        each recorded move to the initial puzzle state.
+
+        Returns:
+        --------
+        list[list[int]]
+            A list where each entry represents the puzzle state (flattened 1D) at each step.
+        """
+        if not self.solve_states:
+            return []
+
+        puzzle = self.env.puzzle_to_solve.copy()  # Start from the initial puzzle state
+        puzzle = np.array(puzzle).reshape(self.env.size, self.env.size)
+        reconstructed_steps = [puzzle.flatten().tolist()]  # Store the initial state as a list
+        
+        for step, (state, move) in enumerate(self.solve_states):
+            dr, dc = move  # Extract move direction
+            zero_pos = np.argwhere(puzzle == 0)[0]  # Find empty tile position
+            r, c = zero_pos
+
+            # Compute the new position for the empty tile
+            new_r, new_c = r + dr, c + dc
+
+            # Apply the move (swap)
+            puzzle[r, c], puzzle[new_r, new_c] = puzzle[new_r, new_c], puzzle[r, c]
+
+            # Store the new state as a regular Python list
+            reconstructed_steps.append(puzzle.flatten().tolist())
+
+        return reconstructed_steps
+
+
         
             
-from Puzzle_env import SlidingPuzzleEnv
+# from Puzzle_env import SlidingPuzzleEnv
 
-env = SlidingPuzzleEnv(size=4)
-agent = EnhancedSearch(env)
+# env = SlidingPuzzleEnv(size=4)
+# agent = EnhancedSearch(env)
 
-env.generate_puzzle()
+# env.generate_puzzle()
+# solve_steps = agent.solve()
+
+# print("\n===== Solution Steps =====\n")
 # print(agent.env.puzzle_to_solve)
-solve_steps = agent.solve()
 
-print("\n===== Solution Steps =====\n")
-print(agent.env.puzzle_to_solve)
+# print(solve_steps)
+# for i in range(len(solve_steps)):
+#     print(solve_steps[i])
 
-for step, (state, move) in enumerate(solve_steps, 1):
-    print(f"Step {step}: Move {move}\n")
-    print(state)
-    print("\n" + "-" * 20 + "\n")
+
+# # for step, (state, move) in enumerate(solve_steps, 1):
+# #     print(f"Step {step}: Move {move}\n")
+# #     print(state)
+# #     print("\n" + "-" * 20 + "\n")

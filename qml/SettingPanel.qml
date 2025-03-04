@@ -78,7 +78,7 @@ Item {
                     ComboBox {
                         id: agentComboBox
                         Layout.fillWidth: true
-                        model: ["A*", "Q-Learning", "Sarsa", "row greedy"]
+                        model: ["A*", "Greedy", "Q-Learning", "Sarsa", "row greedy"]
                     }
                     Label {
                         text: "Solver speed (step/sec):"
@@ -159,6 +159,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
+                        settings.setting_set_agent_type(agentComboBox.currentText)
                         settings.setting_set_solver_speed(solverSpeedComboBox.currentText)
                         settings.setting_initiate_solve_puzzle()                        
                     }

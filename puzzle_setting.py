@@ -1,13 +1,5 @@
 from PySide6.QtCore import QObject, Slot
-from puzzle_handler import PuzzleBridge
-from enum import Enum
-
-class AgentType(Enum):
-    Q_LEARNING = "Q_Learning"
-    SARSA = "Sarsa"
-    A_STAR = "A_star"
-    BLIND = "Blind"
-    HEURISTIC = "Heuristic"
+from puzzle_handler import PuzzleBridge, AgentType
 
 class PuzzleSetting(QObject):
     def __init__(self, parent=None):
@@ -34,6 +26,7 @@ class PuzzleSetting(QObject):
     @Slot(str)
     def setting_set_agent_type(self, value):
         '''sets the agent type that is going to solve the puzzle'''
+        # print(f"type is being detected to be {value}")
         if value == "Q-Learning":
             agent = AgentType.Q_LEARNING
         elif value == "Sarsa":
@@ -44,6 +37,10 @@ class PuzzleSetting(QObject):
             agent = AgentType.BLIND
         elif value == "Heuristic":
             agent = AgentType.HEURISTIC
+        elif value == "Greedy":
+            agent = AgentType.GREEDY
+        
+        print(f"type is being setted to the {agent}")
         self.bridge.agent_type = agent
     
     @Slot(int) # working. dont mind.
@@ -69,5 +66,5 @@ class PuzzleSetting(QObject):
     @Slot()
     def setting_initiate_solve_puzzle(self):
         '''calls the handler's solve puzzle function'''
-        self.bridge.sovle_puzzle()
+        self.bridge.solve_puzzle()
         
