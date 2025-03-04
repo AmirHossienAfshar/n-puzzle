@@ -6,7 +6,7 @@ import random
 from Puzzle_env import SlidingPuzzleEnv
 from QlearningAgent import QLearningAgent
 from A_StarAgent import AStarSolver
-from RowSearch import EnhancedSearch
+from RowSearch import Hierarchical_A_Star
 from enum import Enum
 
 class AgentType(Enum):
@@ -16,6 +16,7 @@ class AgentType(Enum):
     BLIND = "Blind"
     HEURISTIC = "Heuristic"
     GREEDY = "greedy"
+    HIERARCHICAL_A_STAR = "Hierarchical_A_Star"
 
 class PuzzleBridge(QObject):
     puzzle_list_changed = Signal()
@@ -135,14 +136,14 @@ class PuzzleBridge(QObject):
         if self.agent_type == AgentType.A_STAR:     
             print("A_star is about to get started...")
             self.solve_puzzle_A_star()
-        elif self.agent_type == AgentType.GREEDY:
+        elif self.agent_type == AgentType.HIERARCHICAL_A_STAR:
             print("Greedy is about to get started...")
-            self.solve_puzzle_greedy()
+            self.solve_puzzle_hierarchical_A_Star()
         else:
             print(f"Error: Unsupported agent type {self.agent_type}")
             
-    def solve_puzzle_greedy(self):
-        self.agent = EnhancedSearch(env=self.environment)
+    def solve_puzzle_hierarchical_A_Star(self):
+        self.agent = Hierarchical_A_Star(env=self.environment)
         solution_steps = self.agent.solve()
         print(solution_steps)
         t = threading.Thread(target=self.render, args=(solution_steps,), daemon=True)

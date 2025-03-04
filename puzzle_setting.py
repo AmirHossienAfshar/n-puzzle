@@ -39,6 +39,8 @@ class PuzzleSetting(QObject):
             agent = AgentType.HEURISTIC
         elif value == "Greedy":
             agent = AgentType.GREEDY
+        elif value == "Hierarchical A*":
+            agent = AgentType.HIERARCHICAL_A_STAR
         
         print(f"type is being setted to the {agent}")
         self.bridge.agent_type = agent

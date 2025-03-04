@@ -1,11 +1,10 @@
 import numpy as np
 import heapq
 
-class EnhancedSearch:
+class Hierarchical_A_Star:
     def __init__(self, env):
         self.env = env
         self.current_goal = np.full((env.size, env.size), -1)  
-        # important: if it is considerd that the object kept alive, then be setted to defualt each time a new puzzle is made
         self.solve_states = []
                            
     def create_goal_array_by_row(self, n: int, row: int) -> list[np.ndarray]:

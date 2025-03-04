@@ -78,7 +78,7 @@ Item {
                     ComboBox {
                         id: agentComboBox
                         Layout.fillWidth: true
-                        model: ["A*", "Greedy", "Q-Learning", "Sarsa", "row greedy"]
+                        model: ["A*", "Hierarchical A*", "Greedy", "Q-Learning", "Sarsa", "row greedy"]
                     }
                     Label {
                         text: "Solver speed (step/sec):"
