@@ -1,7 +1,5 @@
 # n-puzzle
 
-# RT-Scheduling Operating System Project
-
 ## Table of Contents
 
 1. [Introduction](#introduction)  
