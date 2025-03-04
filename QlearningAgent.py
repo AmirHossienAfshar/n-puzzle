@@ -84,7 +84,7 @@ class QLearningAgent(Agent):
             i+=1
             # print(i)
 
-            while not done and step_count < 1000:
+            while not done and step_count < 10000:
                 # Choose an action using epsilon-greedy.
                 action = self.select_action(state)
                 # Execute the action.
@@ -102,6 +102,32 @@ class QLearningAgent(Agent):
                 print(f"Episode {episode+1}/{episodes}, Total Reward: {total_reward}, Epsilon: {self.exploration_rate}")
 
         print("Training complete!")
+    
+    # def train(self, episodes):
+    #     """Train the agent over a number of episodes."""
+    #     for episode in range(episodes):
+    #         state = self.env.reset()
+    #         done = False
+    #         total_reward = 0
+
+    #         while not done:
+    #             # Choose an action using epsilon-greedy.
+    #             action = self.select_action(state)
+    #             # Execute the action.
+    #             next_state, reward, done, _ = self.env.step(action)
+    #             # Update Q-table.
+    #             self.update(state, action, reward, next_state, done)
+    #             state = next_state  # Move to the next state
+    #             total_reward += reward
+
+    #         self.adjust_exploration_rate()
+
+    #         # Optionally, print progress every so often.
+    #         if (episode + 1) % 100 == 0:
+    #             print(f"Episode {episode+1}/{episodes}, Total Reward: {total_reward}, Epsilon: {self.exploration_rate}")
+
+    #     print("Training complete!")
+
         
     def solve(self, puzzle_to_solve):
         """
@@ -115,8 +141,8 @@ class QLearningAgent(Agent):
         done = np.array_equal(self.env.state, self.env.goal_state)
         steps = 0
 
-        while not done:
-        # while not done and steps < 100:
+        # while not done:
+        while not done and steps < 10000:
             state = self.env.state.flatten()
             # print(state)
             state_key = self.get_state_key(state)
@@ -190,17 +216,17 @@ class QLearningAgent(Agent):
         
         return masked
 
-# from Puzzle_env import SlidingPuzzleEnv
+from Puzzle_env import SlidingPuzzleEnv
 
-# env = SlidingPuzzleEnv(size=3)
-# agent = QLearningAgent(
-#         game_env=env,
-#         learning_rate=0.1,
-#         discount_factor=0.99,
-#         exploration_rate=1.0,
-#         epsilon_decay_rate=0.95,
-#         min_epsilon=0.01
-#     )
+env = SlidingPuzzleEnv(size=3)
+agent = QLearningAgent(
+        game_env=env,
+        learning_rate=0.1,
+        discount_factor=0.99,
+        exploration_rate=1.0,
+        epsilon_decay_rate=0.95,
+        min_epsilon=0.01
+    )
 
 
 # print(f"goal state is {agent.env.goal_state}")

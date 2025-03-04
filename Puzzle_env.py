@@ -150,6 +150,44 @@ class SlidingPuzzleEnv(gym.Env):
         # Return heavy penalty for invalid moves.
         return self.state.flatten(), -5, False, {}
     
+    # def step(self, action):
+    #     prev_distance = self.manhattan_distance(self.state, self.goal_state)
+    #     if self._apply_action(action):
+    #         new_distance = self.manhattan_distance(self.state, self.goal_state)
+    #         reward = 5 * (prev_distance - new_distance) - 0.5
+
+    #         # Check if goal state is reached
+    #         if np.array_equal(self.state, self.goal_state):
+    #             reward = 1000
+    #             done = True
+    #         else:
+    #             done = False
+
+    #         # Update state history
+    #         self.state_history.append(self.state.flatten())
+    #         if len(self.state_history) > self.max_history_length:
+    #             self.state_history.pop(0)
+
+    #         # Check for loops
+    #         repeats = self.check_for_loops()
+    #         if repeats >= self.loop_threshold:
+    #             reward -= 20  # Penalize for getting stuck
+    #             done = True   # Terminate the episode
+
+    #         return self.state.flatten(), reward, done, {}
+    #     else:
+    #         # Invalid move
+    #         return self.state.flatten(), -5, False, {}
+
+    # def check_for_loops(self):
+    #     """Count the maximum number of times any state appears in the history."""
+    #     state_counts = {}
+    #     for s in self.state_history:
+    #         s_key = tuple(s)
+    #         state_counts[s_key] = state_counts.get(s_key, 0) + 1
+    #     max_repeats = max(state_counts.values())
+    #     return max_repeats
+    
     # def step(self, action): # this one is the one that uses a list, for privous visited states. doesn't make sence for the memory managment
     #     # Use an episode-level visited set (stored in the environment or agent).
     #     state_key = tuple(self.state.flatten())
