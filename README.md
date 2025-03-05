@@ -61,16 +61,12 @@ An inversion is when a pair of tiles are in the wrong order. For example, in a 3
 
 ### Expected number of actions and states
 Cosidering a puzzle of n*n with a single empty tile, 
-$$
-\frac{(n-2)^2 \times 4 + (4n-8)\times 3 + 8}{n^2} = \frac{4n^2 - 4n}{n^2}
-$$
+$$\frac{(n-2)^2 \times 4 + (4n-8)\times 3 + 8}{n^2} = \frac{4n^2 - 4n}{n^2}$$
 this will be the expected numbers of actions. by callculating the limit of that,
-$$
-\lim_{n \to \infty} \frac{4n^2 - 4n}{n^2} = 4
-$$
+$$\lim_{n \to \infty} \frac{4n^2 - 4n}{n^2} = 4$$
 there will be about 4 actions, for each state of the problem.
 
-Also, for counting the expected number of states, we could simply flat the input $n \times n$ array to have a $ (n^2)!$ states.
+Also, for counting the expected number of states, we could simply flat the input $n \times n$ array to have a $(n^2)!$ states.
 
 All of those said, we could conclude that this problem would be solved alot better with huristics and Rl agents, rather than the classic search methods.
 
