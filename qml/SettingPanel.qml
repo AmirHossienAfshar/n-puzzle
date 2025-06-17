@@ -83,7 +83,7 @@ Item {
                     ComboBox {
                         id: agentComboBox
                         Layout.fillWidth: true
-                        model: ["A*", "Hierarchical A*", "Greedy", "Q-Learning", "Sarsa", "row greedy"]
+                        model: ["A*", "Hierarchical A*", "BFS", "Q-Learning", "DFS", "IDS"]
                     }
                     // Label {
                     //     text: "Solver speed (step/sec):"
@@ -146,7 +146,8 @@ Item {
         // Group box of search algorithms
         GroupBox {
             visible: agentComboBox.currentText === "A*" || agentComboBox.currentText === "Hierarchical A*" ||
-                     agentComboBox.currentText === "Greedy" || agentComboBox.currentText === "row greedy"
+                     agentComboBox.currentText === "IDS" || agentComboBox.currentText === "row greedy" ||
+                     agentComboBox.currentText === "BFS" || agentComboBox.currentText === "DFS"
 
 
             id: solveProgressGroupBox
@@ -214,7 +215,7 @@ Item {
                     ComboBox {
                         id: solverSpeedComboBox
                         Layout.fillWidth: true
-                        model: ["4", "1", "2", "8"]
+                        model: ["8", "2", "4", "16"]
                     }
                 }
                 Button {

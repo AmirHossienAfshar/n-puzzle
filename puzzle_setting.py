@@ -33,12 +33,12 @@ class PuzzleSetting(QObject):
             agent = AgentType.SARSA
         elif value == "A*":
             agent = AgentType.A_STAR
-        elif value == "Blind":
-            agent = AgentType.BLIND
-        elif value == "Heuristic":
-            agent = AgentType.HEURISTIC
-        elif value == "Greedy":
-            agent = AgentType.GREEDY
+        elif value == "DFS":
+            agent = AgentType.DFS
+        elif value == "BFS":
+            agent = AgentType.BFS
+        elif value == "IDS":
+            agent = AgentType.IDS
         elif value == "Hierarchical A*":
             agent = AgentType.HIERARCHICAL_A_STAR
         

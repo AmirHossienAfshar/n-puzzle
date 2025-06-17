@@ -47,10 +47,10 @@ This problem inherits from the Gym environment, making it perfect for using RL a
 The puzzle generated is guaranteed to be solvable based on the following conditions:
 
 - **Odd N**: The puzzle instance is solvable if the number of inversions is even in the input state.
-- **Even N**:
+- **Even N**: when n is even, an n-by-n board is solvable if and only if the number of inversions plus the row (starting from zero) of the blank square is odd.
+
     - The puzzle instance is solvable if the blank is on an even row counting from the bottom (second-last, fourth-last, etc.) and the number of inversions is odd.
     - The puzzle instance is solvable if the blank is on an odd row counting from the bottom (last, third-last, fifth-last, etc.) and the number of inversions is even.
-
 For all other cases, the puzzle instance is not solvable.
 
 ### Inversions

@@ -5,7 +5,7 @@ import time
 import random
 from Puzzle_env import SlidingPuzzleEnv
 from QlearningAgent import QLearningAgent
-from A_StarAgent import AStarSolver
+from A_StarAgent import Search
 from RowSearch import Hierarchical_A_Star
 from enum import Enum
 from worker import Worker
@@ -14,9 +14,9 @@ class AgentType(Enum):
     Q_LEARNING = "Q_Learning"
     SARSA = "Sarsa"
     A_STAR = "A_star"
-    BLIND = "Blind"
-    HEURISTIC = "Heuristic"
-    GREEDY = "greedy"
+    DFS = "DFS"
+    BFS = "BFS"
+    IDS = "IDS"
     HIERARCHICAL_A_STAR = "Hierarchical_A_Star"
 
 class PuzzleBridge(QObject):
@@ -58,7 +58,8 @@ class PuzzleBridge(QObject):
         self.environment = SlidingPuzzleEnv(self.puzzle_size)
         self.step_per_sec = 0
         self.agent_type = None
-        self.agent = None
+        # self.agent = None
+        self.search_methods = Search(self.environment)
         self.train_progress = 0.0
         self.train_episode_num = 1000
         self.invoke_start = False
@@ -184,7 +185,6 @@ class PuzzleBridge(QObject):
     def handle_search_finished(self):
         print("Search thread finished.")
         self.set_search_status_progress_is_busy(False)
-        self.set_search_button_enable(False) # prevents multiple times of performing the search
         self.set_invoke_start_btn(True)
         self.set_invoke_generate_btn(True) # after searchin is done, new puzzle is allowed to be maid
         self.set_search_status_is_done(True)
@@ -195,17 +195,12 @@ class PuzzleBridge(QObject):
         print(tb)
             
     def search(self):
+        self.set_search_button_enable(False) # prevents multiple times of performing the search
         self.set_invoke_generate_btn(False) # while searching, no new puzzle must be maid
         self.set_search_status_is_pending(False)
         self.set_search_status_progress_is_busy(True)
-        
-        if self.agent_type == AgentType.A_STAR:
-            worker = Worker(self.search_puzzle_A_star)
-        elif self.agent_type == AgentType.HIERARCHICAL_A_STAR:
-            worker = Worker(self.search_puzzle_hierarchical_A_Star)
-        else:
-            print("Error: agent_type is not set!")
-            return
+    
+        worker = Worker(self.search_puzzle)
 
         # connect signals
         worker.signals.result.connect(self.handle_search_result)
@@ -216,23 +211,38 @@ class PuzzleBridge(QObject):
         self.threadpool.start(worker)
         
         
+    def search_puzzle(self, progress_callback=None):
+        solution_steps = None
+        if self.agent_type == AgentType.A_STAR:
+            print("ASTAR is triggred")
+            solution_steps = self.search_methods.solve_A_start()
+                   
+        elif self.agent_type == AgentType.BFS:
+            print("BFS is triggred")
+            solution_steps = self.search_methods.solve_bfs()
+            
+        elif self.agent_type == AgentType.DFS:
+            print("DFS is triggred")
+            solution_steps = self.search_methods.solve_dfs()
+            
+        elif self.agent_type == AgentType.IDS:
+            print("IDS is triggred")
+            solution_steps = self.search_methods.solve_ids()
+            
+        # to do: integerate search models return types...
+        if solution_steps != None:
+            solution = [state for state, _ in solution_steps]
+        else:
+            self.invoke_error()
+        return solution
+        
     def search_puzzle_hierarchical_A_Star(self, progress_callback=None):
         self.agent = Hierarchical_A_Star(env=self.environment)
         solution_steps = self.agent.solve()
         # print(solution_steps)
         return solution_steps
-        
-    def search_puzzle_A_star(self, progress_callback=None): # to-do: integerate all solvers in a single format, so there wouldn't be a need to do all those in seperated funcs.
-        print("strated solving by A start")
-        self.agent = AStarSolver(env=self.environment)
-        solution_steps = self.agent.solve()
-        if solution_steps != None:
-            only_states = [state for state, _ in solution_steps]
-        else:
-            self.invoke_error()        
-        return only_states
     
-    def solve_puzzle(self):
+    def solve_puzzle(self): # to-do: integerate with pyside qthreads rather than python, as it cuases glitches
         self.set_search_button_enable(False)
         t = threading.Thread(target=self.render, args=(self.solution,), daemon=True)
         t.start()
@@ -320,30 +330,3 @@ class PuzzleBridge(QObject):
         for i in range(101):
             time.sleep(0.1)
             self.set_agent_training_progress(i/100)
-    
-    #### old method, only in case needed        
-    # def search(self):
-    #     if self.agent_type is None:
-    #         print("Error: agent_type is not set!")
-    #         return
-    #     print(f"Solver triggered with agent type of {self.agent_type}")
-    #     self.set_invoke_generate_btn(False) # while searching, no new puzzle must be maid
-    #     self.set_search_status_is_pending(False)
-    #     self.set_search_status_progress_is_busy(True)
-
-    #     if self.agent_type == AgentType.A_STAR:     
-    #         print("A_star is about to get started...")
-    #         self.solution = self.search_puzzle_A_star()
-    #     elif self.agent_type == AgentType.HIERARCHICAL_A_STAR:
-    #         print("Greedy is about to get started...")
-    #         self.solution = self.search_puzzle_hierarchical_A_Star()
-    #     else:
-    #         print(f"Error: Unsupported agent type {self.agent_type}")
-            
-    #     print("hellp")
-
-    #     self.set_search_status_progress_is_busy(False)
-    #     self.set_search_button_enable(False) # prevents multiple times of performing the search
-    #     self.set_invoke_start_btn(True)
-    #     self.set_invoke_generate_btn(True) # after searchin is done, new puzzle is allowed to be maid
-    #     self.set_search_status_is_done(True)
