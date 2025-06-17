@@ -38,6 +38,10 @@ ApplicationWindow {
             trainingProgressValue: bridge.pyside_training_progress
             startSolverEnabled: bridge.pyside_invoke_start_btn
             generatePuzzleEnabled: bridge.pyside_invoke_generate_btn
+            searchPuzzleEnabled: bridge.pyside_search_btn_is_enable
+            searchPendingLableStatus: bridge.pyside_search_status_is_pending
+            searchDoneLableStatus: bridge.pyside_search_status_is_done
+            seachProgressBusy: bridge.pyside_search_status_progress_is_busy
         }
     }
 }

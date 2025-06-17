@@ -70,3 +70,6 @@ class PuzzleSetting(QObject):
         '''calls the handler's solve puzzle function'''
         self.bridge.solve_puzzle()
         
+    @Slot()
+    def setting_initiate_search(self):
+        self.bridge.search()

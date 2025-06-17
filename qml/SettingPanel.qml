@@ -8,6 +8,10 @@ Item {
     property alias trainingProgressValue: trainValue.value
     property alias startSolverEnabled: startSolverButton.enabled
     property alias generatePuzzleEnabled: generatePuzzleBtn.enabled
+    property alias searchPuzzleEnabled: startSearchButton.enabled
+    property alias searchPendingLableStatus: searchPendingLable.visible
+    property alias searchDoneLableStatus: searchDoneLable.visible
+    property alias seachProgressBusy: solveProgressBar.visible
 
     id: settingsPanel
     Pyside_Setting_class {
@@ -116,6 +120,7 @@ Item {
             }
         }
 
+        // Group box of learning algorithms
         GroupBox {
             visible: agentComboBox.currentText === "Q-Learning" || agentComboBox.currentText === "Sarsa"
             id: trainingProgress
@@ -127,7 +132,6 @@ Item {
             RowLayout {
                 anchors.fill: parent
                 spacing: 10
-
                 Label {
                     text: "Training:"
                 }
@@ -139,13 +143,14 @@ Item {
             }
         }
 
+        // Group box of search algorithms
         GroupBox {
             visible: agentComboBox.currentText === "A*" || agentComboBox.currentText === "Hierarchical A*" ||
                      agentComboBox.currentText === "Greedy" || agentComboBox.currentText === "row greedy"
 
 
             id: solveProgressGroupBox
-            title: "Solve Progress"
+            title: "Search"
             Layout.fillWidth: true
             Layout.fillHeight: false
             font.pixelSize: 14
@@ -157,11 +162,11 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.alignment: Qt.AlignHCenter
-                    // onClicked: {
-                    //     settings.setting_set_agent_type(agentComboBox.currentText)
-                    //     settings.setting_set_solver_speed(solverSpeedComboBox.currentText)
-                    //     settings.setting_initiate_solve_puzzle()                        
-                    // }
+                    onClicked: {
+                        settings.setting_set_agent_type(agentComboBox.currentText)
+                        settings.setting_set_solver_speed(solverSpeedComboBox.currentText)
+                        settings.setting_initiate_search()                        
+                    }
                 }
                 RowLayout {
                     // anchors.fill: parent
@@ -169,7 +174,15 @@ Item {
                     Layout.fillHeight: true
                     spacing: 10
                     Label {
-                        text: "Solving:"
+                        text: "search status:"
+                    }
+                    Label {
+                        id: searchPendingLable
+                        text: "pending..."
+                    }
+                    Label {
+                        id: searchDoneLable
+                        text: "Done!"
                     }
                     U.ProgressBar {
                         id: solveProgressBar
@@ -178,9 +191,7 @@ Item {
                     }
                 }
             }
-            
         }
-
         
         GroupBox {
             id: solverControl

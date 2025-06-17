@@ -24,6 +24,10 @@ class PuzzleBridge(QObject):
     agent_training_progress_changed = Signal()
     invoke_start_btn_changed = Signal()
     invoke_generate_btn_changed = Signal()
+    search_btn_is_enable_changed = Signal()
+    search_status_is_pending_changed = Signal()
+    search_status_is_done_changed = Signal()
+    search_status_progress_is_busy_changed = Signal()
     
     _instance = None  # Singleton instance
     
@@ -45,6 +49,7 @@ class PuzzleBridge(QObject):
         super().__init__()
         self.puzzle_list = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.puzzle_size = 3
+        self.solution = None
         t = threading.Thread(target=self.main_func, daemon=True)
         t.start()
         self.environment = SlidingPuzzleEnv(self.puzzle_size)
@@ -55,6 +60,38 @@ class PuzzleBridge(QObject):
         self.train_episode_num = 1000
         self.invoke_start = False
         self.invoke_generate = True
+        self.search_btn_is_enable = False
+        self.search_status_is_pending = True
+        self.search_status_is_done = False
+        self.search_status_progress_is_busy = False
+        
+    def set_search_button_enable(self, value):
+        self.search_btn_is_enable = value
+        self.search_btn_is_enable_changed.emit()
+        
+    def get_search_button_enable(self):
+        return self.search_btn_is_enable
+        
+    def set_search_status_is_pending(self, value):
+        self.search_status_is_pending = value
+        self.search_status_is_pending_changed.emit()
+        
+    def get_search_status_is_pending(self):
+        return self.search_status_is_pending
+        
+    def set_search_status_is_done(self, value):
+        self.search_status_is_done = value
+        self.search_status_is_done_changed.emit()
+        
+    def get_search_status_is_done(self):
+        return self.search_status_is_done
+        
+    def set_search_status_progress_is_busy(self, value):
+        self.search_status_progress_is_busy = value
+        self.search_status_progress_is_busy_changed.emit()
+        
+    def get_search_status_progress_is_busy(self):
+        return self.search_status_progress_is_busy
 
     def set_puzzle_list(self, value):
         self.puzzle_list = value
@@ -108,11 +145,22 @@ class PuzzleBridge(QObject):
     pyside_training_progress = Property(float, get_agent_training_progress, set_agent_training_progress, notify=agent_training_progress_changed)
     pyside_puzzle_list = Property(list, get_puzzle_list, set_puzzle_list, notify=puzzle_list_changed)
     pyside_puzzle_size = Property(int, get_puzzle_size, set_puzzle_size, notify=puzzle_size_changed)
+    pyside_search_btn_is_enable = Property(bool, get_search_button_enable, set_search_button_enable, notify=search_btn_is_enable_changed)
+    pyside_search_status_is_pending = Property(bool, get_search_status_is_pending, set_search_status_is_pending,
+                                               notify= search_status_is_pending_changed)
+    pyside_search_status_is_done = Property(bool, get_search_status_is_done, set_search_status_is_done,
+                                               notify= search_status_is_done_changed)
+    pyside_search_status_progress_is_busy = Property(bool, get_search_status_progress_is_busy, set_search_status_progress_is_busy,
+                                               notify= search_status_progress_is_busy_changed)
             
     def generate_new_puzzle(self):
         state = self.environment.generate_puzzle().flatten()
         self.set_puzzle_list(state.tolist()) # each puzzle that is setted here, is going to be the one that is solved.
-        self.set_invoke_start_btn(True)
+        # self.set_invoke_start_btn(True)
+        self.set_search_button_enable(True)
+        self.set_invoke_start_btn(False) # disables the solving for the provious puzzle rather than the very new one
+        self.set_search_status_is_done(False)
+        self.set_search_status_is_pending(True)
         
     def train_agent(self): # to-do: all RL agents must contain the same format of training.
         # self.agent = QLearningAgent(self.environment) ### this part has to be handled. 
@@ -126,53 +174,59 @@ class PuzzleBridge(QObject):
         )
         self.agent.train(self.train_episode_num)
         
-    def solve_puzzle(self):
+    def search(self):
         if self.agent_type is None:
             print("Error: agent_type is not set!")
             return
-        
         print(f"Solver triggered with agent type of {self.agent_type}")
+        self.set_search_status_is_pending(False)
+        self.set_search_status_progress_is_busy(True)
 
         if self.agent_type == AgentType.A_STAR:     
             print("A_star is about to get started...")
-            self.solve_puzzle_A_star()
+            self.solution = self.search_puzzle_A_star()
         elif self.agent_type == AgentType.HIERARCHICAL_A_STAR:
             print("Greedy is about to get started...")
-            self.solve_puzzle_hierarchical_A_Star()
+            self.solution = self.search_puzzle_hierarchical_A_Star()
         else:
             print(f"Error: Unsupported agent type {self.agent_type}")
-            
-    def solve_puzzle_hierarchical_A_Star(self):
+        self.set_search_status_progress_is_busy(False)
+        self.set_search_button_enable(False) # prevents multiple times of performing the search
+        self.set_invoke_start_btn(True)
+        self.set_search_status_is_done(True)
+        
+    def search_puzzle_hierarchical_A_Star(self):
         self.agent = Hierarchical_A_Star(env=self.environment)
         solution_steps = self.agent.solve()
-        print(solution_steps)
-        t = threading.Thread(target=self.render, args=(solution_steps,), daemon=True)
-        t.start()
+        # print(solution_steps)
+        return solution_steps
         
-    def solve_puzzle_A_star(self): # to-do: integerate all solvers in a single format, so there wouldn't be a need to do all those in seperated funcs.
+    def search_puzzle_A_star(self): # to-do: integerate all solvers in a single format, so there wouldn't be a need to do all those in seperated funcs.
         print("strated solving by A start")
         self.agent = AStarSolver(env=self.environment)
         solution_steps = self.agent.solve()
         if solution_steps != None:
             only_states = [state for state, _ in solution_steps]
         else:
-            self.invoke_error()
-        t = threading.Thread(target=self.render, args=(only_states,), daemon=True)
+            self.invoke_error()        
+        return only_states
+    
+    def solve_puzzle(self):
+        self.set_search_button_enable(False)
+        t = threading.Thread(target=self.render, args=(self.solution,), daemon=True)
         t.start()
         
     def render(self, solved_array):
         print(solved_array)
         self.set_invoke_start_btn(False)
         self.set_invoke_generate_btn(False)
+        self.set_search_button_enable(False)
         for arr_ in solved_array:
             time.sleep(1 / self.step_per_sec)
             self.set_puzzle_list(arr_)
         self.set_invoke_generate_btn(True)
         print("finished rendering.")
         
-    def main_func(self):
-        # self.test_progress_bar()
-        pass
     
     def test_puzzle(self, steps=10):
         n = self.puzzle_size
@@ -237,6 +291,10 @@ class PuzzleBridge(QObject):
         
         return states
     
+    def main_func(self):
+        # self.test_progress_bar()
+        pass
+
     def test_progress_bar(self):
         for i in range(101):
             time.sleep(0.1)
