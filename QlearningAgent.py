@@ -216,17 +216,20 @@ class QLearningAgent(Agent):
         
         return masked
 
-from Puzzle_env import SlidingPuzzleEnv
 
-env = SlidingPuzzleEnv(size=3)
-agent = QLearningAgent(
-        game_env=env,
-        learning_rate=0.1,
-        discount_factor=0.99,
-        exploration_rate=1.0,
-        epsilon_decay_rate=0.95,
-        min_epsilon=0.01
-    )
+
+
+# from Puzzle_env import SlidingPuzzleEnv
+
+# env = SlidingPuzzleEnv(size=3)
+# agent = QLearningAgent(
+#         game_env=env,
+#         learning_rate=0.1,
+#         discount_factor=0.99,
+#         exploration_rate=1.0,
+#         epsilon_decay_rate=0.95,
+#         min_epsilon=0.01
+#     )
 
 
 # print(f"goal state is {agent.env.goal_state}")

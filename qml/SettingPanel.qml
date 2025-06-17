@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Pyside_Setting 1.0
+import QtQuick.Controls.Universal 2.12 as U
 
 Item {
     property alias trainingProgressValue: trainValue.value
@@ -80,23 +81,18 @@ Item {
                         Layout.fillWidth: true
                         model: ["A*", "Hierarchical A*", "Greedy", "Q-Learning", "Sarsa", "row greedy"]
                     }
-                    Label {
-                        text: "Solver speed (step/sec):"
-                    }
-                    ComboBox {
-                        id: solverSpeedComboBox
-                        Layout.fillWidth: true
-                        model: ["4", "1", "2", "8"]
-                    }
+                    // Label {
+                    //     text: "Solver speed (step/sec):"
+                    // }
+                    // ComboBox {
+                    //     id: solverSpeedComboBox
+                    //     Layout.fillWidth: true
+                    //     model: ["4", "1", "2", "8"]
+                    // }
                     Label {
                         visible: agentComboBox.currentText === "Q-Learning" || agentComboBox.currentText === "Sarsa"
                         text: "Train episode number:"
                     }
-                    // TextArea {
-                    //     id: episodeNumberInput
-                    //     Layout.fillWidth: true
-                    //     text: "1000"
-                    // }
                     TextField {
                         visible: agentComboBox.currentText === "Q-Learning" || agentComboBox.currentText === "Sarsa"
                         id: episodeNumberInput
@@ -142,6 +138,50 @@ Item {
                 }
             }
         }
+
+        GroupBox {
+            visible: agentComboBox.currentText === "A*" || agentComboBox.currentText === "Hierarchical A*" ||
+                     agentComboBox.currentText === "Greedy" || agentComboBox.currentText === "row greedy"
+
+
+            id: solveProgressGroupBox
+            title: "Solve Progress"
+            Layout.fillWidth: true
+            Layout.fillHeight: false
+            font.pixelSize: 14
+            ColumnLayout {
+                anchors.fill: parent
+                Button {
+                    id: startSearchButton
+                    text: "Start the Search!"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.alignment: Qt.AlignHCenter
+                    // onClicked: {
+                    //     settings.setting_set_agent_type(agentComboBox.currentText)
+                    //     settings.setting_set_solver_speed(solverSpeedComboBox.currentText)
+                    //     settings.setting_initiate_solve_puzzle()                        
+                    // }
+                }
+                RowLayout {
+                    // anchors.fill: parent
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 10
+                    Label {
+                        text: "Solving:"
+                    }
+                    U.ProgressBar {
+                        id: solveProgressBar
+                        indeterminate: true
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+            
+        }
+
+        
         GroupBox {
             id: solverControl
             title: "Solver Control"
@@ -153,6 +193,19 @@ Item {
                 anchors.fill: parent
                 spacing: 10
 
+                GridLayout {
+                    columns: 2
+                    rowSpacing: 5
+                    columnSpacing: 10
+                    Label {
+                        text: "Solver speed (step/sec):"
+                    }
+                    ComboBox {
+                        id: solverSpeedComboBox
+                        Layout.fillWidth: true
+                        model: ["4", "1", "2", "8"]
+                    }
+                }
                 Button {
                     id: startSolverButton
                     text: "Start the Solver"
@@ -161,7 +214,7 @@ Item {
                     onClicked: {
                         settings.setting_set_agent_type(agentComboBox.currentText)
                         settings.setting_set_solver_speed(solverSpeedComboBox.currentText)
-                        settings.setting_initiate_solve_puzzle()                        
+                        settings.setting_initiate_solve_puzzle()
                     }
                 }
             }

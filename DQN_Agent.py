@@ -51,6 +51,7 @@ class DQNAgent:
         
         # Set device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(self.device)
         
         # Policy network and target network
         self.policy_net = DQN(self.input_dim, self.output_dim).to(self.device)
@@ -79,28 +80,63 @@ class DQNAgent:
         """Store a transition in the replay buffer."""
         self.replay_buffer.append((state, action, reward, next_state, done))
     
+    # def train_step(self):
+    #     """Sample a minibatch from the replay buffer and update the policy network."""
+    #     if len(self.replay_buffer) < self.batch_size:
+    #         return  # Not enough samples to train
+    #     minibatch = random.sample(self.replay_buffer, self.batch_size)
+        
+    #     # Convert lists of experiences to numpy arrays first.
+    #     states_np = np.array([s for s, a, r, ns, d in minibatch], dtype=np.float32)
+    #     actions_np = np.array([a for s, a, r, ns, d in minibatch], dtype=np.int64)
+    #     # rewards_np = np.array([float(r) for s, a, r, ns, d in minibatch], dtype=np.float32)
+    #     rewards_np = np.array(
+    #         [r.item() if hasattr(r, 'item') else float(r) for s, a, r, ns, d in minibatch],
+    #         dtype=np.float32
+    #     )
+    #     next_states_np = np.array([ns for s, a, r, ns, d in minibatch], dtype=np.float32)
+    #     dones_np = np.array([float(d) for s, a, r, ns, d in minibatch], dtype=np.float32)
+        
+    #     states = torch.from_numpy(states_np).to(self.device)
+    #     actions = torch.from_numpy(actions_np).unsqueeze(1).to(self.device)
+    #     rewards = torch.from_numpy(rewards_np).to(self.device)
+    #     next_states = torch.from_numpy(next_states_np).to(self.device)
+    #     dones = torch.from_numpy(dones_np).to(self.device)
+        
+    #     # Current Q-values from the policy network for the actions taken.
+    #     q_values = self.policy_net(states).gather(1, actions).squeeze(1)
+        
+    #     # Next Q-values from the target network (max over actions).
+    #     with torch.no_grad():
+    #         next_q_values = self.target_net(next_states).max(1)[0]
+        
+    #     expected_q_values = rewards + self.discount_factor * next_q_values * (1 - dones)
+        
+    #     loss = nn.MSELoss()(q_values, expected_q_values)
+        
+    #     self.optimizer.zero_grad()
+    #     loss.backward()
+    #     self.optimizer.step()
+    
     def train_step(self):
         """Sample a minibatch from the replay buffer and update the policy network."""
         if len(self.replay_buffer) < self.batch_size:
             return  # Not enough samples to train
         minibatch = random.sample(self.replay_buffer, self.batch_size)
         
-        # Convert lists of experiences to numpy arrays first.
-        states_np = np.array([s for s, a, r, ns, d in minibatch], dtype=np.float32)
-        actions_np = np.array([a for s, a, r, ns, d in minibatch], dtype=np.int64)
-        # rewards_np = np.array([float(r) for s, a, r, ns, d in minibatch], dtype=np.float32)
-        rewards_np = np.array(
-            [r.item() if hasattr(r, 'item') else float(r) for s, a, r, ns, d in minibatch],
-            dtype=np.float32
-        )
-        next_states_np = np.array([ns for s, a, r, ns, d in minibatch], dtype=np.float32)
-        dones_np = np.array([float(d) for s, a, r, ns, d in minibatch], dtype=np.float32)
+        # Convert lists of experiences to NumPy arrays first
+        states_np = np.array([s for s, _, _, _, _ in minibatch], dtype=np.float32)
+        actions_np = np.array([a for _, a, _, _, _ in minibatch], dtype=np.int64)
+        rewards_np = np.array([float(r) for _, _, r, _, _ in minibatch], dtype=np.float32)
+        next_states_np = np.array([ns for _, _, _, ns, _ in minibatch], dtype=np.float32)
+        dones_np = np.array([float(d) for _, _, _, _, d in minibatch], dtype=np.float32)
         
-        states = torch.from_numpy(states_np).to(self.device)
-        actions = torch.from_numpy(actions_np).unsqueeze(1).to(self.device)
-        rewards = torch.from_numpy(rewards_np).to(self.device)
-        next_states = torch.from_numpy(next_states_np).to(self.device)
-        dones = torch.from_numpy(dones_np).to(self.device)
+        # Move data to GPU with correct types
+        states = torch.tensor(states_np, dtype=torch.float32, device=self.device)
+        actions = torch.tensor(actions_np, dtype=torch.int64, device=self.device).unsqueeze(1)
+        rewards = torch.tensor(rewards_np, dtype=torch.float32, device=self.device)
+        next_states = torch.tensor(next_states_np, dtype=torch.float32, device=self.device)
+        dones = torch.tensor(dones_np, dtype=torch.float32, device=self.device)
         
         # Current Q-values from the policy network for the actions taken.
         q_values = self.policy_net(states).gather(1, actions).squeeze(1)
@@ -116,6 +152,7 @@ class DQNAgent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
 
     def train(self, episodes):
         """
