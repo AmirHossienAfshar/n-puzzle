@@ -51,50 +51,82 @@ class SlidingPuzzleEnv(gym.Env):
             np.random.shuffle(board)
         return board.reshape(self.size, self.size)
     
+    # def is_solvable(self, board: np.ndarray) -> bool:
+    #     """
+    #     Determines if a given sliding puzzle configuration is solvable based on inversion count and 
+    #     the position of the empty tile.
+
+    #     Solvability Rules:
+    #     - If N (grid size) is odd, the puzzle is solvable if the number of inversions is even.
+    #     - If N is even:
+    #     - If the blank tile is on an even row from the bottom (2nd-last, 4th-last, ...), 
+    #         the puzzle is solvable if the number of inversions is odd.
+    #     - If the blank tile is on an odd row from the bottom (last, 3rd-last, ...), 
+    #         the puzzle is solvable if the number of inversions is even.
+
+    #     Parameters:
+    #     -----------
+    #     board : np.ndarray
+    #         A flattened 1D representation of the puzzle grid.
+
+    #     Returns:
+    #     --------
+    #     bool
+    #         True if the puzzle is solvable, False otherwise.
+    #     """
+    #     board_list = board[board != 0]  # Remove the empty tile (0) for inversion counting
+    #     inv_count = sum(
+    #         board_list[i] > board_list[j]
+    #         for i in range(len(board_list))
+    #         for j in range(i + 1, len(board_list))
+    #     )
+
+    #     n = self.size  # Grid size (N x N)
+        
+    #     # Locate the empty tile (0)
+    #     empty_tile_index = np.where(board == 0)[0][0]
+    #     empty_tile_row = empty_tile_index // n  # Row index (0-based)
+    #     blank_row_from_bottom = n - empty_tile_row  # Row position from bottom (1-based)
+
+    #     if n % 2 == 1:  # Odd grid size
+    #         return inv_count % 2 == 0
+    #     else:  # Even grid size
+    #         if blank_row_from_bottom % 2 == 0:  # Blank tile on even row from bottom
+    #             return inv_count % 2 == 1  # Must have odd inversions
+    #         else:  # Blank tile on odd row from bottom
+    #             return inv_count % 2 == 0  # Must have even inversions
+    
     def is_solvable(self, board: np.ndarray) -> bool:
         """
-        Determines if a given sliding puzzle configuration is solvable based on inversion count and 
-        the position of the empty tile.
+        Determine whether the given board is solvable.
 
-        Solvability Rules:
-        - If N (grid size) is odd, the puzzle is solvable if the number of inversions is even.
-        - If N is even:
-        - If the blank tile is on an even row from the bottom (2nd-last, 4th-last, ...), 
-            the puzzle is solvable if the number of inversions is odd.
-        - If the blank tile is on an odd row from the bottom (last, 3rd-last, ...), 
-            the puzzle is solvable if the number of inversions is even.
-
-        Parameters:
-        -----------
-        board : np.ndarray
-            A flattened 1D representation of the puzzle grid.
+        Args:
+            board (np.ndarray): 2D NumPy array representing the puzzle.
+                                The blank is represented by 0.
 
         Returns:
-        --------
-        bool
-            True if the puzzle is solvable, False otherwise.
+            bool: True if the puzzle is solvable, False otherwise.
         """
-        board_list = board[board != 0]  # Remove the empty tile (0) for inversion counting
-        inv_count = sum(
-            board_list[i] > board_list[j]
-            for i in range(len(board_list))
-            for j in range(i + 1, len(board_list))
-        )
+        n = self.size  # Grid size (n x n)
+        flat = board.flatten()
+        tiles = [tile for tile in flat if tile != 0]
 
-        n = self.size  # Grid size (N x N)
-        
-        # Locate the empty tile (0)
-        empty_tile_index = np.where(board == 0)[0][0]
-        empty_tile_row = empty_tile_index // n  # Row index (0-based)
-        blank_row_from_bottom = n - empty_tile_row  # Row position from bottom (1-based)
+        # Count inversions
+        inversions = 0
+        for i in range(len(tiles)):
+            for j in range(i + 1, len(tiles)):
+                if tiles[i] > tiles[j]:
+                    inversions += 1
 
-        if n % 2 == 1:  # Odd grid size
-            return inv_count % 2 == 0
-        else:  # Even grid size
-            if blank_row_from_bottom % 2 == 0:  # Blank tile on even row from bottom
-                return inv_count % 2 == 1  # Must have odd inversions
-            else:  # Blank tile on odd row from bottom
-                return inv_count % 2 == 0  # Must have even inversions
+        # Get row index (0-based) of blank from top
+        blank_index = flat.tolist().index(0)
+        blank_row = blank_index // n
+
+        if n % 2 == 1:
+            return inversions % 2 == 0
+        else:
+            return (inversions + blank_row) % 2 == 1
+
 
 
     def get_possible_moves(self):
@@ -225,6 +257,7 @@ class SlidingPuzzleEnv(gym.Env):
         """this part is for the initial puzzle, not the one that is going to learn form"""
         self.state = self._shuffle_board()
         self.puzzle_to_solve = self.state.flatten()
+        # print(f"[LOG TO CHECK] {self.state}")
         return self.state.flatten()
 
     def reset(self):

@@ -2,11 +2,9 @@ from PySide6.QtCore import QObject, Property, Signal, Slot, QThreadPool
 import threading
 import numpy as np
 import time
-import random
 from Puzzle_env import SlidingPuzzleEnv
 from QlearningAgent import QLearningAgent
 from A_StarAgent import Search
-from RowSearch import Hierarchical_A_Star
 from enum import Enum
 from worker import Worker
 
@@ -178,10 +176,12 @@ class PuzzleBridge(QObject):
         )
         self.agent.train(self.train_episode_num)
         
+    # thread function
     def handle_search_result(self, result):
         self.solution = result
         print("Got solution:", result)
 
+    # thread function
     def handle_search_finished(self):
         print("Search thread finished.")
         self.set_search_status_progress_is_busy(False)
@@ -189,13 +189,15 @@ class PuzzleBridge(QObject):
         self.set_invoke_generate_btn(True) # after searchin is done, new puzzle is allowed to be maid
         self.set_search_status_is_done(True)
 
+    # thread function
     def handle_search_error(self, error_tuple):
         exctype, value, tb = error_tuple
         print("Search error:", value)
         print(tb)
             
     def search(self):
-        self.set_search_button_enable(False) # prevents multiple times of performing the search
+        self.set_search_button_enable(False) # prevents multiple times of performing the search 
+        # to do: implement a way that a puzzle could be solved with different methods...
         self.set_invoke_generate_btn(False) # while searching, no new puzzle must be maid
         self.set_search_status_is_pending(False)
         self.set_search_status_progress_is_busy(True)
@@ -229,18 +231,17 @@ class PuzzleBridge(QObject):
             print("IDS is triggred")
             solution_steps = self.search_methods.solve_ids()
             
-        # to do: integerate search models return types...
+        elif self.agent_type == AgentType.HIERARCHICAL_A_STAR:
+            print("row greedy is triggred")
+            solution_steps = self.search_methods.solve_row_greedy()
+            
+        print(solution_steps)
         if solution_steps != None:
             solution = [state for state, _ in solution_steps]
         else:
             self.invoke_error()
         return solution
         
-    def search_puzzle_hierarchical_A_Star(self, progress_callback=None):
-        self.agent = Hierarchical_A_Star(env=self.environment)
-        solution_steps = self.agent.solve()
-        # print(solution_steps)
-        return solution_steps
     
     def solve_puzzle(self): # to-do: integerate with pyside qthreads rather than python, as it cuases glitches
         self.set_search_button_enable(False)
@@ -257,70 +258,6 @@ class PuzzleBridge(QObject):
             self.set_puzzle_list(arr_)
         self.set_invoke_generate_btn(True)
         print("finished rendering.")
-        
-    
-    def test_puzzle(self, steps=10):
-        n = self.puzzle_size
-        puzzle = np.arange(1, n*n+1).reshape(n, n)
-        puzzle[n-1, n-1] = 0  # Place blank (0) in bottom-right corner
-
-        states = []
-
-        states.append(puzzle.flatten().tolist())
-
-        directions = [(-1, 0),  # move up
-                    (1,  0),  # move down
-                    (0, -1),  # move left
-                    (0,  1)]  # move right
-
-        for _ in range(steps):
-            blank_row, blank_col = np.where(puzzle == 0)
-            blank_row, blank_col = int(blank_row[0]), int(blank_col[0])
-
-            valid_moves = []
-            for d_row, d_col in directions:
-                new_r, new_c = blank_row + d_row, blank_col + d_col
-                if 0 <= new_r < n and 0 <= new_c < n:
-                    valid_moves.append((d_row, d_col))
-
-            d_row, d_col = random.choice(valid_moves)
-            new_r, new_c = blank_row + d_row, blank_col + d_col
-
-            puzzle[blank_row, blank_col], puzzle[new_r, new_c] = (
-                puzzle[new_r, new_c],
-                puzzle[blank_row, blank_col],
-            )
-
-            states.append(puzzle.flatten().tolist())
-        return states
-    
-    def test_puzzle_flat(self, steps=10):
-        n = self.puzzle_size
-        initial_state = list(range(1, n*n)) + [0]
-        
-        states = [initial_state.copy()]
-        state = initial_state.copy()
-        
-        for _ in range(steps):
-            index = state.index(0)
-            row, col = divmod(index, n)
-            
-            valid_moves = []
-            if row > 0:
-                valid_moves.append(index - n)
-            if row < n - 1:
-                valid_moves.append(index + n)
-            if col > 0:
-                valid_moves.append(index - 1)
-            if col < n - 1:
-                valid_moves.append(index + 1)
-            
-            neighbor_index = random.choice(valid_moves)
-            state[index], state[neighbor_index] = state[neighbor_index], state[index]
-            
-            states.append(state.copy())
-        
-        return states
     
     def main_func(self):
         # self.test_progress_bar()
