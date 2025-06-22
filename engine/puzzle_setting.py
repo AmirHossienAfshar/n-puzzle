@@ -1,5 +1,5 @@
 from PySide6.QtCore import QObject, Slot
-from puzzle_handler import PuzzleBridge, AgentType
+from engine import PuzzleBridge, AgentType
 
 class PuzzleSetting(QObject):
     def __init__(self, parent=None):
@@ -33,14 +33,14 @@ class PuzzleSetting(QObject):
             agent = AgentType.SARSA
         elif value == "A*":
             agent = AgentType.A_STAR
-        elif value == "Blind":
-            agent = AgentType.BLIND
-        elif value == "Heuristic":
-            agent = AgentType.HEURISTIC
-        elif value == "Greedy":
-            agent = AgentType.GREEDY
-        elif value == "Hierarchical A*":
-            agent = AgentType.HIERARCHICAL_A_STAR
+        elif value == "DFS":
+            agent = AgentType.DFS
+        elif value == "BFS":
+            agent = AgentType.BFS
+        elif value == "IDS":
+            agent = AgentType.IDS
+        elif value == "Row Greedy A*":
+            agent = AgentType.Row_GREEDY_A_STAR
         
         print(f"type is being setted to the {agent}")
         self.bridge.agent_type = agent

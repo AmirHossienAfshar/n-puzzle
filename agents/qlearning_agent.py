@@ -1,4 +1,4 @@
-from AbstractAgent import Agent
+from agents import Agent
 import numpy as np
 from enum import Enum
 

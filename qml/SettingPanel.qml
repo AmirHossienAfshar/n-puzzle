@@ -12,6 +12,7 @@ Item {
     property alias searchPendingLableStatus: searchPendingLable.visible
     property alias searchDoneLableStatus: searchDoneLable.visible
     property alias seachProgressBusy: solveProgressBar.visible
+    property alias seachNotDone: searchNotDoneLable.visible
 
     id: settingsPanel
     Pyside_Setting_class {
@@ -83,7 +84,7 @@ Item {
                     ComboBox {
                         id: agentComboBox
                         Layout.fillWidth: true
-                        model: ["A*", "Hierarchical A*", "Greedy", "Q-Learning", "Sarsa", "row greedy"]
+                        model: ["A*", "Row Greedy A*", "BFS", "Q-Learning", "DFS", "IDS"]
                     }
                     // Label {
                     //     text: "Solver speed (step/sec):"
@@ -145,8 +146,9 @@ Item {
 
         // Group box of search algorithms
         GroupBox {
-            visible: agentComboBox.currentText === "A*" || agentComboBox.currentText === "Hierarchical A*" ||
-                     agentComboBox.currentText === "Greedy" || agentComboBox.currentText === "row greedy"
+            visible: agentComboBox.currentText === "A*" || agentComboBox.currentText === "Row Greedy A*" ||
+                     agentComboBox.currentText === "IDS" || agentComboBox.currentText === "row greedy" ||
+                     agentComboBox.currentText === "BFS" || agentComboBox.currentText === "DFS"
 
 
             id: solveProgressGroupBox
@@ -184,6 +186,10 @@ Item {
                         id: searchDoneLable
                         text: "Done!"
                     }
+                    Label {
+                        id: searchNotDoneLable
+                        text: "stopped! reached max iteration limit!"
+                    }
                     U.ProgressBar {
                         id: solveProgressBar
                         indeterminate: true
@@ -214,7 +220,7 @@ Item {
                     ComboBox {
                         id: solverSpeedComboBox
                         Layout.fillWidth: true
-                        model: ["4", "1", "2", "8"]
+                        model: ["8", "2", "4", "16"]
                     }
                 }
                 Button {
