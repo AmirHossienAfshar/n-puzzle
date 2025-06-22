@@ -3,7 +3,7 @@ import numpy as np
 from collections import deque
 
 class Search:
-    def __init__(self, env, heuristic="manhattan", max_explored_states=10000000):
+    def __init__(self, env, heuristic="manhattan", max_explored_states=1000000):
         self.env = env
         self.log_interval = 1000
         self.max_explored_states = max_explored_states
@@ -106,9 +106,7 @@ class Search:
         if goal_state is None:
             goal_np_state = self.env._generate_goal_state().flatten()
             goal_state = tuple(int(x) for x in goal_np_state.tolist())
-        
-        size = self.env.size
-        
+                
         # Open set: each item is (f_score, g_score, state, path)
         start_h = self.heuristic_func(initial_state, goal_state)
         # open_set = [(start_h, 0, initial_state, [initial_state])]
@@ -213,7 +211,7 @@ class Search:
         return None
 
 
-    def solve_dfs(self):
+    def solve_dfs(self, max_depth=3000):
         """
         Perform Depth-First Search (DFS) to solve the puzzle.
 
@@ -251,6 +249,10 @@ class Search:
         while stack:
             current, path, depth = stack.pop()
             explored_states += 1
+            
+            if depth > max_depth:
+                print(f"Depth limit reached ({max_depth}). Terminating DFS.")
+                return None
 
             if explored_states > self.max_explored_states:
                 print(f"Terminating DFS after {self.max_explored_states} explored_states (limit reached).")
@@ -303,7 +305,6 @@ class Search:
         goal_np_state = self.env._generate_goal_state().flatten()
         goal_state = tuple(int(x) for x in goal_np_state.tolist())
 
-        size = self.env.size
         explored_states_total = 0
 
         def dls(limit):
@@ -375,8 +376,6 @@ class Search:
         :param goal: List of np.array (goal puzzle states)
         :return: List of moves [(puzzle, move)] from start to goal
         """
-        # print(f"start is {start}")
-        # print(f"goal is {goal}")
         if any(np.array_equal(start, g) for g in goal):
             return []
         
@@ -384,9 +383,7 @@ class Search:
         
         
         goal_bytes_set = {g.tobytes() for g in goal}
-        
-        # print(f"goal_bytes_set is{goal_bytes_set}")
-        
+                
         puzzle_flat = start.ravel()
         heuristic_goal = goal[-1]
         goal_flat = heuristic_goal.ravel()
@@ -408,14 +405,7 @@ class Search:
             if current_bytes in visited:
                 continue
             visited.add(current_bytes)
-            
-            # print(f"current_state is{current_state.tolist()}")
-            # print(f"current_state type is{type(current_state.tolist())}")
-            
-            # print(f"current_state is{tuple(current_state.tolist())}")
-            # print(f"current_state type is{type(tuple(current_state.tolist()))}")
-            
-            
+   
             current_state_ = []
             for i in current_state:
                 for j in i:

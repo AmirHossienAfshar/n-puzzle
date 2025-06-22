@@ -12,6 +12,7 @@ Item {
     property alias searchPendingLableStatus: searchPendingLable.visible
     property alias searchDoneLableStatus: searchDoneLable.visible
     property alias seachProgressBusy: solveProgressBar.visible
+    property alias seachNotDone: searchNotDoneLable.visible
 
     id: settingsPanel
     Pyside_Setting_class {
@@ -184,6 +185,10 @@ Item {
                     Label {
                         id: searchDoneLable
                         text: "Done!"
+                    }
+                    Label {
+                        id: searchNotDoneLable
+                        text: "stopped! reached max iteration limit!"
                     }
                     U.ProgressBar {
                         id: solveProgressBar

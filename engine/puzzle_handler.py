@@ -26,6 +26,7 @@ class PuzzleBridge(QObject):
     search_status_is_pending_changed = Signal()
     search_status_is_done_changed = Signal()
     search_status_progress_is_busy_changed = Signal()
+    invoke_error_lable_changed = Signal()
     
     _instance = None  # Singleton instance
     
@@ -65,6 +66,7 @@ class PuzzleBridge(QObject):
         self.search_status_is_pending = True
         self.search_status_is_done = False
         self.search_status_progress_is_busy = False
+        self.invoke_error_lable = False
         
     def set_search_button_enable(self, value):
         self.search_btn_is_enable = value
@@ -72,6 +74,13 @@ class PuzzleBridge(QObject):
         
     def get_search_button_enable(self):
         return self.search_btn_is_enable
+        
+    def set_invoke_error_lable(self, value):
+        self.invoke_error_lable = value
+        self.invoke_error_lable_changed.emit()
+        
+    def get_invoke_error_lable(self):
+        return self.invoke_error_lable
         
     def set_search_status_is_pending(self, value):
         self.search_status_is_pending = value
@@ -153,8 +162,10 @@ class PuzzleBridge(QObject):
                                                notify= search_status_is_done_changed)
     pyside_search_status_progress_is_busy = Property(bool, get_search_status_progress_is_busy, set_search_status_progress_is_busy,
                                                notify= search_status_progress_is_busy_changed)
+    pyside_invoke_error_lable = Property(bool, get_invoke_error_lable, set_invoke_error_lable, notify= invoke_error_lable_changed)
             
     def generate_new_puzzle(self):
+        self.solution = None
         state = self.environment.generate_puzzle().flatten()
         self.set_puzzle_list(state.tolist()) # each puzzle that is setted here, is going to be the one that is solved.
         # self.set_invoke_start_btn(True)
@@ -162,6 +173,7 @@ class PuzzleBridge(QObject):
         self.set_invoke_start_btn(False) # disables the solving for the provious puzzle rather than the very new one
         self.set_search_status_is_done(False)
         self.set_search_status_is_pending(True)
+        self.set_invoke_error_lable(False)
         
     def train_agent(self): # to-do: all RL agents must contain the same format of training.
         # self.agent = QLearningAgent(self.environment) ### this part has to be handled. 
@@ -178,20 +190,23 @@ class PuzzleBridge(QObject):
     # thread function
     def handle_search_result(self, result):
         self.solution = result
-        print("Got solution:", result)
+        # print("Got solution:", result)
 
     # thread function
     def handle_search_finished(self):
-        print("Search thread finished.")
+        # print("Search thread finished.")
         self.set_search_status_progress_is_busy(False)
         self.set_invoke_start_btn(True)
         self.set_invoke_generate_btn(True) # after searchin is done, new puzzle is allowed to be maid
-        self.set_search_status_is_done(True)
+        if self.solution is not None:
+            self.set_search_status_is_done(True)
+        else:
+            self.set_invoke_start_btn(False)
 
     # thread function
     def handle_search_error(self, error_tuple):
         exctype, value, tb = error_tuple
-        print("Search error:", value)
+        # print("Search error:", value)
         print(tb)
             
     def search(self):
@@ -233,14 +248,18 @@ class PuzzleBridge(QObject):
         elif self.agent_type == AgentType.Row_GREEDY_A_STAR:
             print("row greedy is triggred")
             solution_steps = self.search_methods.solve_row_greedy()
-            
-        print(solution_steps)
+        
+        solution = None    
+        # print(solution_steps)
         if solution_steps != None:
             solution = [state for state, _ in solution_steps]
         else:
             self.invoke_error()
         return solution
-        
+    
+    def invoke_error(self):
+        print("there was an error searching!")
+        self.set_invoke_error_lable(True)
     
     def solve_puzzle(self): # to-do: integerate with pyside qthreads rather than python, as it cuases glitches
         self.set_search_button_enable(False)
@@ -248,7 +267,7 @@ class PuzzleBridge(QObject):
         t.start()
         
     def render(self, solved_array):
-        print(solved_array)
+        # print(solved_array)
         self.set_invoke_start_btn(False)
         self.set_invoke_generate_btn(False)
         self.set_search_button_enable(False)

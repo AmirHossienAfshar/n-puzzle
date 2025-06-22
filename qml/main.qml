@@ -42,6 +42,7 @@ ApplicationWindow {
             searchPendingLableStatus: bridge.pyside_search_status_is_pending
             searchDoneLableStatus: bridge.pyside_search_status_is_done
             seachProgressBusy: bridge.pyside_search_status_progress_is_busy
+            seachNotDone: bridge.pyside_invoke_error_lable
         }
     }
 }
