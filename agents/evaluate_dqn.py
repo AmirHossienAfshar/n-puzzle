@@ -4,7 +4,7 @@ import time
 import torch
 import numpy as np
 
-from puzzle_env import SlidingPuzzleEnv
+from search import SlidingPuzzleEnv
 from agents.dqn_agent import DQN
 
 def print_board(state_flat, size):

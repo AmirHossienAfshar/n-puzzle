@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from gym import spaces
-from puzzle_env import SlidingPuzzleEnv  
+from search import SlidingPuzzleEnv  
 
 
 OPPOSITE = {0:1, 1:0, 2:3, 3:2}  # Up<->Down, Left<->Right
