@@ -1,12 +1,11 @@
-from PySide6.QtCore import QObject, Property, Signal, Slot, QThreadPool
-import threading
-import numpy as np
-import time
-from Puzzle_env import SlidingPuzzleEnv
+from PySide6.QtCore import QObject, Property, Signal, QThreadPool
+from puzzle_env import SlidingPuzzleEnv
 from QlearningAgent import QLearningAgent
-from A_StarAgent import Search
+from search import Search
 from enum import Enum
 from engine.worker import Worker
+import threading
+import time
 
 class AgentType(Enum):
     Q_LEARNING = "Q_Learning"
@@ -15,7 +14,7 @@ class AgentType(Enum):
     DFS = "DFS"
     BFS = "BFS"
     IDS = "IDS"
-    HIERARCHICAL_A_STAR = "Hierarchical_A_Star"
+    Row_GREEDY_A_STAR = "Row_Greedy_A_Star"
 
 class PuzzleBridge(QObject):
     puzzle_list_changed = Signal()
@@ -231,7 +230,7 @@ class PuzzleBridge(QObject):
             print("IDS is triggred")
             solution_steps = self.search_methods.solve_ids()
             
-        elif self.agent_type == AgentType.HIERARCHICAL_A_STAR:
+        elif self.agent_type == AgentType.Row_GREEDY_A_STAR:
             print("row greedy is triggred")
             solution_steps = self.search_methods.solve_row_greedy()
             

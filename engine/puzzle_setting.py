@@ -39,8 +39,8 @@ class PuzzleSetting(QObject):
             agent = AgentType.BFS
         elif value == "IDS":
             agent = AgentType.IDS
-        elif value == "Hierarchical A*":
-            agent = AgentType.HIERARCHICAL_A_STAR
+        elif value == "Row Greedy A*":
+            agent = AgentType.Row_GREEDY_A_STAR
         
         print(f"type is being setted to the {agent}")
         self.bridge.agent_type = agent

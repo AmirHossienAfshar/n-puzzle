@@ -83,7 +83,7 @@ Item {
                     ComboBox {
                         id: agentComboBox
                         Layout.fillWidth: true
-                        model: ["A*", "Hierarchical A*", "BFS", "Q-Learning", "DFS", "IDS"]
+                        model: ["A*", "Row Greedy A*", "BFS", "Q-Learning", "DFS", "IDS"]
                     }
                     // Label {
                     //     text: "Solver speed (step/sec):"
@@ -145,7 +145,7 @@ Item {
 
         // Group box of search algorithms
         GroupBox {
-            visible: agentComboBox.currentText === "A*" || agentComboBox.currentText === "Hierarchical A*" ||
+            visible: agentComboBox.currentText === "A*" || agentComboBox.currentText === "Row Greedy A*" ||
                      agentComboBox.currentText === "IDS" || agentComboBox.currentText === "row greedy" ||
                      agentComboBox.currentText === "BFS" || agentComboBox.currentText === "DFS"
 
