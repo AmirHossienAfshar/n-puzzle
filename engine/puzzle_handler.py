@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, Property, Signal, QThreadPool
 from puzzle_env import SlidingPuzzleEnv
-from QlearningAgent import QLearningAgent
+from agents import QLearningAgent
 from search import Search
 from enum import Enum
 from engine.worker import Worker
