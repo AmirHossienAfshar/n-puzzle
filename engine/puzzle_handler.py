@@ -6,7 +6,7 @@ from Puzzle_env import SlidingPuzzleEnv
 from QlearningAgent import QLearningAgent
 from A_StarAgent import Search
 from enum import Enum
-from worker import Worker
+from engine.worker import Worker
 
 class AgentType(Enum):
     Q_LEARNING = "Q_Learning"
