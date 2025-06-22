@@ -1,5 +1,5 @@
 from PySide6.QtCore import QObject, Slot
-from engine.puzzle_handler import PuzzleBridge, AgentType
+from engine import PuzzleBridge, AgentType
 
 class PuzzleSetting(QObject):
     def __init__(self, parent=None):

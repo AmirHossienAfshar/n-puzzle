@@ -1,8 +1,7 @@
 import sys
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterType
-from engine.puzzle_handler import PuzzleBridge
-from engine.puzzle_setting import PuzzleSetting
+from engine import PuzzleBridge, PuzzleSetting
 import os
 
 if __name__ == "__main__":
